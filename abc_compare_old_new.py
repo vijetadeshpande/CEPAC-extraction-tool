@@ -20,28 +20,25 @@ import multiprocessing
 import abc_auxilliaries as aux
 
 
-def get_lineplots(df, save_path):
-    sb.set_style("darkgrid", {"axes.facecolor": ".9"})
-    sb.set_context("notebook", rc={"lines.linewidth": 1}, font_scale = 1.2)
-    aspect_r = 1
-    line_alpha = 0.7
-    '''
-    df["Strategy"] = df.Strategy.str.replace('(', '')
-    df["Strategy"] = df.Strategy.str.replace(')', '')
-    df["Strategy"] = df.Strategy.str.replace(',', '')
-    df["Coverage"] = pd.DataFrame(df.Strategy.str.split(' ',1).tolist(), columns = ['Coverage','Coverage time'])["Coverage"]
-    df["Coverage time"] = pd.DataFrame(df.Strategy.str.split(' ',1).tolist(), columns = ['Coverage','Coverage time'])["Coverage time"]
-    df = df.loc[df['Coverage'].isin(['10%', '20%', '30%']), :]
-    df["Coverage time"] = df["Coverage time"].str.replace(' months', '')
-    df["Coverage time"] = pd.to_numeric(df['Coverage time'], errors='coerce')
-    '''
-    plt.figure(figsize=(20, 10))
-    df = df.loc[df['Coverage level (%)'].isin([20, 30]), :]
-    g = sb.FacetGrid(df, col="Coverage level (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
-    g = (g.map(sb.lineplot, "Coverage time (months)", r"Percentage reduction in incidence", "Model type", alpha = line_alpha).add_legend())#, "WellID")
-    g.axes[0,0].set_ylabel(r"Reduction in incidence rate (%)")
-    plt.savefig(os.path.join(save_path, r'Percentage reduction in incidence'), dpi = 360)
-    del g
+# Plot percentage reduction for strategies
+df = plot_df["percentage reduction"]
+'''
+df["Strategy"] = df.Strategy.str.replace('(', '')
+df["Strategy"] = df.Strategy.str.replace(')', '')
+df["Strategy"] = df.Strategy.str.replace(',', '')
+df["Coverage"] = pd.DataFrame(df.Strategy.str.split(' ',1).tolist(), columns = ['Coverage','Coverage time'])["Coverage"]
+df["Coverage time"] = pd.DataFrame(df.Strategy.str.split(' ',1).tolist(), columns = ['Coverage','Coverage time'])["Coverage time"]
+df = df.loc[df['Coverage'].isin(['10%', '20%', '30%']), :]
+df["Coverage time"] = df["Coverage time"].str.replace(' months', '')
+df["Coverage time"] = pd.to_numeric(df['Coverage time'], errors='coerce')
+'''
+plt.figure(figsize=(20, 10))
+df = df.loc[df['Coverage (%)'].isin([10, 20, 30]), :]
+g = sb.FacetGrid(df, col="Coverage (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
+g = (g.map(sb.lineplot, "Coverage time (months)", r"Percentage reduction in incidence", "Benefit type", alpha = line_alpha).add_legend())#, "WellID")
+g.axes[0,0].set_ylabel(r"Reduction in incidence rate (%)")
+plt.savefig(os.path.join(save_path, r'Percentage reduction in incidence'), dpi = 360)
+del g
 
 
 if False:

@@ -72,24 +72,26 @@ def import_perturbation_file(path):
 
     return float_df
 
-def import_all_cepac_in_files(path, extensions = [r'\*.in']):
+# TODO: changing (removing backslash) extension for it work on Mac
+def import_all_cepac_in_files(path, extensions = [r'*.in']):
     # setting up input data
     #extensions = [r'\*.in']  # ,r'\*.xlsx']
     data = {}
     for ex in extensions:
-        for filename in glob.glob(path + ex):
-            if ex == r'\*.in':
+        for filename in glob.glob(os.path.join(path, ex)):
+            if ex == r'*.in':
                 float_name = re.sub(r"\.in$", '', os.path.basename(os.path.normpath(filename)))
                 with open(filename, 'r') as f2:
                     float_df = pd.DataFrame((f2.read()).split('\n'))
                 data[float_name] = float_df[0].str.split(pat=None, n=-1, expand=True)
-            elif ex == r'\*.xls':
+            elif ex == r'*.xls':
                 float_name = re.sub(r"\.xls$", '', os.path.basename(os.path.normpath(filename)))
                 data[float_name] = pd.read_excel(filename, sheet_name = None, header = None)
 
     return data
 
-def import_all_cepac_out_files(path, module = '', sensitivity_module = False, transmission_module = False, extensions = [r'\*.out']):
+# TODO: changing (removing backslash) extension for it work on Mac
+def import_all_cepac_out_files(path, module = '', sensitivity_module = False, transmission_module = False, extensions = [r'*.out']):
     # define dictionary for saving the output to return
     data = {}
     
@@ -97,8 +99,8 @@ def import_all_cepac_out_files(path, module = '', sensitivity_module = False, tr
     # if you want
     for ex in extensions:
         # read all the files in the folder of the current extension
-        for filename in glob.glob(path + ex):
-            if ex == r'\*.out':
+        for filename in glob.glob(os.path.join(path, ex)):
+            if ex == r'*.out':
                 float_name = re.sub('.out', "", os.path.basename(os.path.normpath(filename)))
                 float_name = re.sub('cepac_run', "", float_name)
                 float_name = re.sub('cepac_run,', "", float_name)

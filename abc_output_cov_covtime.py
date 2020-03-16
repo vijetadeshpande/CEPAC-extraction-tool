@@ -50,9 +50,12 @@ def plot_heatmap(val_to_replace, percentage_decline, path_dict):
     
     # choose color theme
     #cmap = cm.get_cmap('RdYlGn')
-    cmap = 'PuBu_r' #'Reds'
+    cmap = 'PuBu' #'Reds'
     #cmap = 'coolwarm'
     #cmap = sb.cm._cmap_r
+    my_col_map = ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"] # high point is dark blue
+    my_col_map_r = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"] # high point is white
+    cmap = sb.color_palette(my_col_map_r)
     
     plt.figure(figsize=(10, 5))
     sb.set(font_scale=1.2)
@@ -91,7 +94,7 @@ def export_abc_out_to_excel(cepac_out, structured_out, val_to_replace, path_dict
     writer.save()
 
 
-def write_final_runs(var1, var2, value_grid, path_dict):
+def write_final_runs(value_grid, path_dict):
     
     # aux function for creating final run files
     def get_reduction_coeff(percentage_red, stop_time):
@@ -140,28 +143,27 @@ def write_final_runs(var1, var2, value_grid, path_dict):
     inp = {}
     for k in out:
         out[k]['A'] = cepac_out['status quo']['SQ']#['A']
-        inp[k] = {var1: 0, 'prep_efficacy': 0.96, 'CohortSize': 10000000,
-           var2: 0, 'HIVmthIncidMale': 0.00357692085607886, 'prep_usage_at_initialization': 'n'}
+        inp[k] = {'PrEPCoverage': 0, 'prep_efficacy': 0.96, 'CohortSize': 10000000,
+           'PrEPDuration': 0, 'HIVmthIncidMale': 0.00357692085607886, 'prep_usage_at_initialization': 'n'}
     
     row_idx = 0
     percentage_decline = []
-    for i in val_to_replace[var1]:
-        for j in val_to_replace[var2]:
+    for i in val_to_replace['PrEPCoverage']:
+        for j in val_to_replace['PrEPDuration']:
             if i == 0.0:
-                j_idx = np.where(val_to_replace[var2] == j)[0][0]
+                j_idx = np.where(val_to_replace['PrEPDuration'] == j)[0][0]
                 out[j_idx] = {}
                 out[j_idx]["A"] = cepac_out["status quo"]["SQ"]
                 out[j_idx]["B"] = cepac_out["status quo"]["SQ"]
                 out[j_idx]["C"] = cepac_out["status quo"]["SQ"]
                 inp[j_idx] = inp[5]
-            inp[row_idx][var1] = i
-            inp[row_idx][var2] = j
-            inp[row_idx]['PrEPDuration'] = 24 #120 #600 #60
+            inp[row_idx]['PrEPCoverage'] = i
+            inp[row_idx]['PrEPDuration'] = 600 #60
             percentage_decline.append(tx_algo.get_percentage_decline(out[row_idx], inp[row_idx]))
             row_idx += 1
     
     # plot results
-    plot_heatmap(val_to_replace, percentage_decline, path_dict)
+    #plot_heatmap(val_to_replace, percentage_decline, path_dict)
     
     # write results to excel file
     export_abc_out_to_excel(cepac_out, out, val_to_replace, path_dict)
@@ -182,7 +184,7 @@ def write_final_runs(var1, var2, value_grid, path_dict):
     # first we'll find the indices of all the required variables
     idx = {}
     var_list = ["UseHIVIncidReduction", "HIVIncidReductionStopTime", "HIVIncidReductionCoefficient", 
-                "UseDynamicTransmission", var1, var2]
+                "UseDynamicTransmission", "PrEPCoverage", "PrEPDuration"]
     for k in var_list:
         idx[k] = base_int.loc[base_int.loc[:, 0] == k, :].index.values
     
@@ -192,7 +194,7 @@ def write_final_runs(var1, var2, value_grid, path_dict):
         float_int = deepcopy(base_int)
         
         # following value of stop time might not be correct
-        float_int.loc[idx["HIVIncidReductionStopTime"], 1] = 24 #120 #480#60#120
+        float_int.loc[idx["HIVIncidReductionStopTime"], 1] = 480#60#120
         coeff = get_reduction_coeff(percentage_decline[run], float_int.loc[idx["HIVIncidReductionStopTime"], 1].values[0])
         if coeff <= 0:
             # disable incidence reduction 
@@ -208,8 +210,8 @@ def write_final_runs(var1, var2, value_grid, path_dict):
         float_int.loc[idx["UseDynamicTransmission"], 1] = 0
         
         # replace coverage and coverage time
-        float_int.loc[idx[var1], 1:2] = aux.get_coverage_level_from_file_name(name_map[run])
-        float_int.loc[idx[var2], 1:2] = aux.get_coverage_time_from_file_name(name_map[run])
+        float_int.loc[idx["PrEPCoverage"], 1:2] = 0.01*(aux.get_coverage_level_from_file_name(name_map[run]))
+        float_int.loc[idx["PrEPDuration"], 1:2] = aux.get_coverage_time_from_file_name(name_map[run])
         
         # write the file
         save_path = os.path.join(final_path, name_map[run].split('_')[1]) + '.in'

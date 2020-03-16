@@ -22,7 +22,7 @@ import abc_auxilliaries as aux
 def save_line_plots(plot_dict, save_path):
     
     # what is simulation horizon
-    t_sim = 24#120 #60
+    t_sim = 60
     
     # plot theme
     #tx_sb = sb.FacetGrid(data = plot_frame, row = 'Scenario')
@@ -57,7 +57,7 @@ def save_line_plots(plot_dict, save_path):
     ax1.axhline(status_quo_tx_val, ls='--', color = 'k', alpha = 0.4)
     ax2.axhline(status_quo_tx_val, ls='--', color = 'k', alpha = 0.4)
     #ax3.axhline(status_quo_tx_val, ls='--', color = 'k', alpha = 0.4)
-    ax1.text(2,status_quo_tx_val-12000, "SQ transmissions \nat t = " + str(t_sim), alpha = 0.5)
+    ax1.text(2,37000, "SQ transmissions \nat t = " + str(t_sim), alpha = 0.5)
     plt.savefig(os.path.join(save_path, r'Transmissions'), dpi = 360)
     del g
     
@@ -71,7 +71,7 @@ def save_line_plots(plot_dict, save_path):
     ax1.axhline(status_quo_inf_val, ls='--', color = 'k', alpha = 0.4)
     ax2.axhline(status_quo_inf_val, ls='--', color = 'k', alpha = 0.4)
     #ax3.axhline(status_quo_inf_val, ls='--', color = 'k', alpha = 0.4)
-    ax1.text(5,status_quo_inf_val-5000, "SQ infections \nat t = " + str(t_sim), alpha = 0.5)
+    ax1.text(5,20000, "SQ infections \nat t = " + str(t_sim), alpha = 0.5)
     #sb.regplot(x=np.array([t_sim]), y=np.array([22183]), scatter=True, fit_reg=False, marker='x',
     #            scatter_kws={"s": 100})
     plt.savefig(os.path.join(save_path, r'Infections'), dpi = 360)
@@ -87,7 +87,7 @@ def save_line_plots(plot_dict, save_path):
     ax1.axhline(status_quo_inci_val, ls='--', color = 'k', alpha = 0.4)
     ax2.axhline(status_quo_inci_val, ls='--', color = 'k', alpha = 0.4)
     #ax3.axhline(status_quo_inci_val, ls='--', color = 'k', alpha = 0.4)
-    ax1.text(35,status_quo_inci_val-0.3, "SQ incidence \nat t = " + str(t_sim), alpha = 0.5)
+    ax1.text(5,3, "SQ incidence \nat t = " + str(t_sim), alpha = 0.5)
     plt.savefig(os.path.join(save_path, r'Incidence rate'), dpi = 360)
     del g
     
@@ -134,8 +134,8 @@ def save_heatmaps(plot_dict, save_path):
     y = np.ravel(y_grid)
     z = np.array(percentage_decline)
     sb_heatmap = pd.DataFrame()
-    sb_heatmap['PrEP coverage time (months)'] = np.floor(x).astype(int)
-    sb_heatmap['PrEP coverage (%)'] = np.floor(y).astype(int)
+    sb_heatmap['PrEP coverage time (months)'] = np.floor(x)
+    sb_heatmap['PrEP coverage (%)'] = np.floor(y)
     sb_heatmap['Percentage declination in incidence'] = z
     sb_heatmap = sb_heatmap.sort_values(by = 'PrEP coverage time (months)')
     heatmap_df = pd.pivot(data = sb_heatmap,
@@ -154,7 +154,7 @@ def save_heatmaps(plot_dict, save_path):
     
     plt.figure(figsize=(10, 5))
     sb.set(font_scale=1.2)
-    heatmap_plot = sb.heatmap(heatmap_df, annot = True, fmt = '0.1f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': 'Percentage reduction in incidence rate\n due to both benefits'})
+    heatmap_plot = sb.heatmap(heatmap_df, annot = True, fmt = '0.2f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': 'Percentage reduction in incidence\n due to only community benefit'})
     heatmap_plot.figure.axes[0].invert_yaxis()
     # if we need to rotate the axis ticks
     heatmap_plot.figure.savefig(os.path.join(save_path, 'Percentage reduction in incidence.jpg'))
@@ -206,13 +206,13 @@ def calculate_inci_rate(df_dict):
     
     return _inci_rate
 
-def calculate_percentage_reduction(df_sq, df_inv, t_sim):
-    return 100 * (df_sq.loc[t_sim-1] - df_inv.loc[t_sim-1])/(df_sq.loc[0])
+def calculate_percentage_reduction(df_sq, df_inv):
+    return 100 * (df_sq.loc[59] - df_inv.loc[59])/(df_sq.loc[0])
 
 def create_plot_df(cepac_out): 
     
     # what is simulation horizon
-    t_sim = 24#120 #60
+    t_sim = 60
     
     # calculate incidence rate
     for file in cepac_out:
@@ -249,7 +249,7 @@ def create_plot_df(cepac_out):
         df.loc[row_idx: row_idx + t_sim-1, 'Coverage time (months)'] = aux.get_coverage_time_from_file_name(file)
         df_per_red.loc[row_idx/t_sim, 'Coverage level (%)'] = aux.get_coverage_level_from_file_name(file)
         df_per_red.loc[row_idx/t_sim, 'Coverage time (months)'] = aux.get_coverage_time_from_file_name(file)
-        df_per_red.loc[row_idx/t_sim, 'Percentage reduction in incidence rate'] = calculate_percentage_reduction(cepac_out['SQ']['incidence rate'], cepac_out[file]['incidence rate'], t_sim)
+        df_per_red.loc[row_idx/t_sim, 'Percentage reduction in incidence rate'] = calculate_percentage_reduction(cepac_out['SQ']['incidence rate'], cepac_out[file]['incidence rate'])
         #df.loc[row_idx: row_idx + t_sim-1, 'Coverage level (%)'] = 0
         #df.loc[row_idx: row_idx + t_sim-1, 'Coverage time (months)'] = 0
     
@@ -299,7 +299,7 @@ def analyze_final_output(path_inv, path_sq):
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    #save_line_plots(plot_dict, save_path)
+    save_line_plots(plot_dict, save_path)
     # heatmap
     folder_name = 'Heatmaps for CEPAC output'
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)

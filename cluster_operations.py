@@ -10,7 +10,6 @@ import re
 from shutil import copy2
 from shutil import rmtree
 
-
 def parallelize_input(path):
     
     # get list of directories
@@ -61,6 +60,6 @@ def collect_output(path):
         
 
 # mention path
-path = r'C:\Users\Vijeta\Documents\Projects\Brazil PrEP\Transmission runs\CURRENT ANALYSIS\March\SA on dropout (100% uptake in 1 month)\CEPAC in file (SA on dropout percentage)\run this'
+#path = r'C:\Users\Vijeta\Documents\Projects\Brazil PrEP\Transmission runs\Input files\January\Successful basecase\Horizon of 60 months\Without incidence step\Old CEPAC_Final runs'
 #parallelize_input(path)
-collect_output(path)
+#collect_output(path)

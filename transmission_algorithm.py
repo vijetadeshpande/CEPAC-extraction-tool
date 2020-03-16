@@ -168,10 +168,6 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
     # test
     if np.floor(1000 * percentage_decline_new) != np.floor(1000 * percentage_decline):
         print("")
-        
-    # debugging loop
-    if tx['RunA'] >= inf['RunA']:
-        print('gadbad')
     
     return percentage_decline_new
 
