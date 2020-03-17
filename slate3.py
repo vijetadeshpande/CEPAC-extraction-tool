@@ -54,7 +54,7 @@ if True:
     
     elif os.path.exists(path_dict['output']['intervention']):
         # collect parallelized output
-        #c_op.collect_output(os.path.join(path_dict['output']['intervention']))
+        c_op.collect_output(os.path.join(path_dict['output']['intervention']))
         
         # write all final run files
         abc_output.write_final_runs(var_to_replace, path_dict)
