@@ -125,6 +125,20 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
         p_int_start = p_sq_start
         i_sq_cumulative_agg = inf['RunA']
     
+    # Utils
+    def calculate_average_prob(total_inf):
+        p = total_inf/n_hiv_uninfected
+        p_avg = 1 - np.power((1 - p), (1/prep_duration))
+        
+        return p_avg
+    
+    def calculate_end_p_new(p_avg_sq, p_avg_int):
+        p_end = prob_ratio_at_zero * prob_sq_t + (2 * (p_avg_int - (prob_ratio_at_zero * p_avg_sq)))
+        
+        return p_end
+    
+    
+    """
     # function to calculate end month probability
     def calculate_end_p(val, denominator = False):
         p = val/n_hiv_uninfected
@@ -142,6 +156,7 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
     step_4 = calculate_end_p(inf['RunA'] - step_1) # p(inf) at t = end, if only ind benefit was present
     step_5 = calculate_end_p(inf['RunA'] - step_1, True) # p(inf) per month
     percentage_decline = 100*(step_4 - step_3)/step_5
+    
     
     # in revised template the calculation for prob at t=end has changed, as follows
     prob_ratio_at_zero = (inf_prob['RunB']/inf_prob['RunA']).loc[0]
@@ -165,11 +180,32 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
     step_5 = calculate_end_p_new(step_1, step_3) # p(inf)_t for INV with both
     percentage_decline_new = 100 * (step_4 - step_5)/step_2
     
+    """
+    
+    # calculate difference bet infection cases in SQ and INV
+    step_1 = tx['RunA'] - tx['RunB']
+    # calculate average monthly incidence probability in SQ
+    step_2 = calculate_average_prob(inf['RunA'])
+    # calculate average monthly incidence prob in INV
+    step_3 = calculate_average_prob(inf['RunA'] - step_1)
+    # difference in avg monthly prob
+    step_4 = step_3 - step_2
+    # monthly prob at time 't' for INV
+    step_5 = inf_prob['RunB'][prep_duration-1] * ((inf['RunA'] - step_1)/inf['RunA'])
+    # percentage decrease in monthly probability at month t
+    step_6 = (inf_prob['RunB'][prep_duration-1] - step_5)/inf_prob['RunB'][prep_duration-1]
+    
+    # incidence red
+    percentage_decline = 100 * step_6
+    # coefficient
+    coeff = -1*prep_duration/(np.log(1 - step_6))
+    
+    
     # test
     if np.floor(1000 * percentage_decline_new) != np.floor(1000 * percentage_decline):
         print("")
     
-    return percentage_decline_new
+    return percentage_decline
 
 
      

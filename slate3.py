@@ -32,13 +32,13 @@ import link_to_cepac_in_and_out_files as link
 if True:
     # path to import in files
     path_dict = {}
-    path_dict['input'] = r"/Users/vijetadeshpande/Downloads/MPEC/Brazil/Sample run file to test cluster/Test ABC tool"
+    path_dict['input'] = r"/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA"
     path_dict['output'] = {}
     path_dict['output']['intervention'] = os.path.join(path_dict["input"], "Positive coverage runs")
     path_dict['output']['status quo'] = os.path.join(path_dict["input"], "Status quo")
     
     # find and replace following variable
-    var_to_replace = {'PrEPCoverage': np.array([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6]), 'PrEPDuration': np.array([24, 36, 48, 60])}
+    var_to_replace = {'PrEPCoverage': np.array([0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6]), 'PrEPDuration': np.array([24, 36, 48, 60])}
     #{'PrEPCoverage': np.array([0, 0.07, 0.15, 0.22, 0.30]), 'PrEPDuration': np.array([6, 19, 33, 46, 60])} 
     #{'PrEPCoverage': np.array([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6]), 'PrEPDuration': np.array([24, 36, 48, 60])} # 
     
