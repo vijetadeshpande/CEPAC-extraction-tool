@@ -19,6 +19,10 @@ import math
 import multiprocessing
 import abc_auxilliaries as aux
 
+
+#
+cohort_size = 10000000
+
 def save_line_plots(plot_dict, save_path):
     
     # what is simulation horizon
@@ -120,19 +124,26 @@ def save_line_plots(plot_dict, save_path):
     plt.savefig(os.path.join(save_path, r'Infections1'), dpi = 360)
     del g
 
+def extract_percentage_decline_value(df, cov, cov_t):
+    cov_idx = df.index[df.loc[:, 'Coverage level (%)'] == np.floor(cov)].values
+    cov_t_idx = df.index[df.loc[:, 'Coverage time (months)'] == np.floor(cov_t)].values
+    idx = set(cov_idx).intersection(set(cov_t_idx)).pop()
 
-def save_heatmaps(plot_dict, save_path):
+    return df.loc[idx, 'Percentage reduction in incidence rate']
+
+def save_heatmaps(plot_dict, save_path, label):
     
     # heat plot for final runs
     df = plot_dict["percentage reduction"]
     # surface plot
     percentage_decline = df['Percentage reduction in incidence rate']
-    val = {'PrEPCoverage': df['Coverage level (%)'].unique(), 'PrEPDuration': df['Coverage time (months)'].unique()}
+    val = {'PrEPCoverage': np.sort(df['Coverage level (%)'].unique()), 'PrEPDuration': np.sort(df['Coverage time (months)'].unique())}
     x_grid, y_grid = np.meshgrid(val['PrEPDuration'], val['PrEPCoverage'])
-    z_grid = np.array(percentage_decline).reshape(x_grid.shape)
     x = np.ravel(x_grid)
     y = np.ravel(y_grid)
-    z = np.array(percentage_decline)
+    z = []
+    for i in range(len(x)):
+        z.append(extract_percentage_decline_value(plot_dict['percentage reduction'], y[i], x[i]))
     sb_heatmap = pd.DataFrame()
     sb_heatmap['PrEP coverage time (months)'] = np.floor(x)
     sb_heatmap['PrEP coverage (%)'] = np.floor(y)
@@ -154,49 +165,15 @@ def save_heatmaps(plot_dict, save_path):
     
     plt.figure(figsize=(10, 5))
     sb.set(font_scale=1.2)
-    heatmap_plot = sb.heatmap(heatmap_df, annot = True, fmt = '0.2f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': 'Percentage reduction in incidence\n due to only community benefit'})
+    heatmap_plot = sb.heatmap(heatmap_df, annot = True, fmt = '0.2f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': label})
     heatmap_plot.figure.axes[0].invert_yaxis()
     # if we need to rotate the axis ticks
     heatmap_plot.figure.savefig(os.path.join(save_path, 'Percentage reduction in incidence.jpg'))
     
-    if False:
-        percentage_decline = df['Only direct']
-        z_grid = np.array(percentage_decline).reshape(x_grid.shape)
-        z = np.array(percentage_decline)
-        sb_heatmap['Percentage declination in incidence'] = z
-        sb_heatmap = sb_heatmap.sort_values(by = 'PrEP coverage time (months)')
-        heatmap_df = pd.pivot(data = sb_heatmap,
-                           index = 'PrEP coverage time (months)',
-                           columns = 'PrEP coverage (%)',
-                           values = 'Percentage declination in incidence')
-        plt.figure(figsize=(10, 5))
-        sb.set(font_scale=1.2)
-        heatmap_plot = sb.heatmap(heatmap_df, annot = True, fmt = '0.2f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': 'Percentage reduction in incidence\n due to only direct benefit'})
-        heatmap_plot.figure.axes[0].invert_yaxis()
-        # if we need to rotate the axis ticks
-        heatmap_plot.figure.savefig(os.path.join(save_heat, 'Reduction in incidence_Direct benefit.jpg'))
-        
-        #
-        percentage_decline = df['Both']
-        z_grid = np.array(percentage_decline).reshape(x_grid.shape)
-        z = np.array(percentage_decline)
-        sb_heatmap['Percentage declination in incidence'] = z
-        sb_heatmap = sb_heatmap.sort_values(by = 'PrEP coverage time (months)')
-        heatmap_df = pd.pivot(data = sb_heatmap,
-                           index = 'PrEP coverage time (months)',
-                           columns = 'PrEP coverage (%)',
-                           values = 'Percentage declination in incidence')
-        plt.figure(figsize=(10, 5))
-        sb.set(font_scale=1.2)
-        heatmap_plot = sb.heatmap(heatmap_df, annot = True, fmt = '0.2f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': 'Percentage reduction in incidence\n due to both benefit'})
-        heatmap_plot.figure.axes[0].invert_yaxis()
-        # if we need to rotate the axis ticks
-        heatmap_plot.figure.savefig(os.path.join(save_heat, 'Reduction in incidence_Total benefit.jpg'))
-
 
 def calculate_inci_rate(df_dict):
     # susceptibles
-    _sus = (10000000 * np.ones(df_dict['infections'].shape))
+    _sus = (cohort_size * np.ones(df_dict['infections'].shape))
     _inf =  df_dict['infections']
     _inf_cumsum = df_dict['infections'].cumsum()
     _sus[1:] -= _inf_cumsum[0:len(_inf_cumsum)-1]
@@ -206,8 +183,8 @@ def calculate_inci_rate(df_dict):
     
     return _inci_rate
 
-def calculate_percentage_reduction(df_sq, df_inv):
-    return 100 * (df_sq.loc[59] - df_inv.loc[59])/(df_sq.loc[0])
+def calculate_percentage_reduction(df_sq, df_inv, t_sim):
+    return 100 * (df_sq.loc[t_sim-1] - df_inv.loc[t_sim-1])/(df_sq.loc[0])
 
 def create_plot_df(cepac_out): 
     
@@ -249,7 +226,7 @@ def create_plot_df(cepac_out):
         df.loc[row_idx: row_idx + t_sim-1, 'Coverage time (months)'] = aux.get_coverage_time_from_file_name(file)
         df_per_red.loc[row_idx/t_sim, 'Coverage level (%)'] = aux.get_coverage_level_from_file_name(file)
         df_per_red.loc[row_idx/t_sim, 'Coverage time (months)'] = aux.get_coverage_time_from_file_name(file)
-        df_per_red.loc[row_idx/t_sim, 'Percentage reduction in incidence rate'] = calculate_percentage_reduction(cepac_out['SQ']['incidence rate'], cepac_out[file]['incidence rate'])
+        df_per_red.loc[row_idx/t_sim, 'Percentage reduction in incidence rate'] = calculate_percentage_reduction(cepac_out['SQ']['incidence rate'], cepac_out[file]['incidence rate'], t_sim)
         #df.loc[row_idx: row_idx + t_sim-1, 'Coverage level (%)'] = 0
         #df.loc[row_idx: row_idx + t_sim-1, 'Coverage time (months)'] = 0
     
@@ -305,4 +282,4 @@ def analyze_final_output(path_inv, path_sq):
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    save_heatmaps(plot_dict, save_path)
+    save_heatmaps(plot_dict, save_path, 'Percentage reduction in incidence \ndue to both benefits')

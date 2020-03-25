@@ -51,11 +51,10 @@ def plot_heatmap(val_to_replace, percentage_decline, path_dict):
     # choose color theme
     #cmap = cm.get_cmap('RdYlGn')
     cmap = 'PuBu' #'Reds'
-    #cmap = 'coolwarm'
-    #cmap = sb.cm._cmap_r
-    my_col_map = ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"] # high point is dark blue
-    my_col_map_r = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"] # high point is white
-    cmap = sb.color_palette(my_col_map_r)
+    #my_col_map = ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"] # high point is dark blue
+    #my_col_map_r = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"] # high point is white
+    cmap = 'PuBu_r'
+    #cmap = sb.color_palette(cmap)
     
     plt.figure(figsize=(10, 5))
     sb.set(font_scale=1.2)
@@ -130,9 +129,10 @@ def write_final_runs(value_grid, path_dict):
         if k == 'popstats':
             continue
         key_name = aux.get_digit_for_file_name(k, val_to_replace)
+        if not key_name in out.keys():
+            out[key_name] = {}
         name_map[key_name] = k
         if "RunB" in k:
-            out[key_name] = {}
             out[key_name]['B'] = cepac_out['intervention'][k]
         elif "RunC" in k:
             out[key_name]['C'] = cepac_out['intervention'][k]
@@ -158,12 +158,12 @@ def write_final_runs(value_grid, path_dict):
                 out[j_idx]["C"] = cepac_out["status quo"]["SQ"]
                 inp[j_idx] = inp[5]
             inp[row_idx]['PrEPCoverage'] = i
-            inp[row_idx]['PrEPDuration'] = 600 #60
+            inp[row_idx]['PrEPDuration'] = 60 #600
             percentage_decline.append(tx_algo.get_percentage_decline(out[row_idx], inp[row_idx]))
             row_idx += 1
     
     # plot results
-    #plot_heatmap(val_to_replace, percentage_decline, path_dict)
+    plot_heatmap(val_to_replace, percentage_decline, path_dict)
     
     # write results to excel file
     export_abc_out_to_excel(cepac_out, out, val_to_replace, path_dict)
@@ -194,7 +194,7 @@ def write_final_runs(value_grid, path_dict):
         float_int = deepcopy(base_int)
         
         # following value of stop time might not be correct
-        float_int.loc[idx["HIVIncidReductionStopTime"], 1] = 480#60#120
+        float_int.loc[idx["HIVIncidReductionStopTime"], 1] = 60 #480#120
         coeff = get_reduction_coeff(percentage_decline[run], float_int.loc[idx["HIVIncidReductionStopTime"], 1].values[0])
         if coeff <= 0:
             # disable incidence reduction 

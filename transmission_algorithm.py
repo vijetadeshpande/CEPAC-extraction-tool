@@ -201,10 +201,6 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
     coeff = -1*prep_duration/(np.log(1 - step_6))
     
     
-    # test
-    if np.floor(1000 * percentage_decline_new) != np.floor(1000 * percentage_decline):
-        print("")
-    
     return percentage_decline
 
 

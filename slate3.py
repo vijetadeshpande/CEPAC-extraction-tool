@@ -32,7 +32,7 @@ import link_to_cepac_in_and_out_files as link
 if True:
     # path to import in files
     path_dict = {}
-    path_dict['input'] = r"/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA"
+    path_dict['input'] = r"/Users/vijetadeshpande/Downloads/MPEC/Brazil/Manaus/2-way SA"
     path_dict['output'] = {}
     path_dict['output']['intervention'] = os.path.join(path_dict["input"], "Positive coverage runs")
     path_dict['output']['status quo'] = os.path.join(path_dict["input"], "Status quo")
@@ -45,7 +45,7 @@ if True:
     # check which path exists
     if os.path.exists(os.path.join(path_dict['input'], 'Final runs')):
         # collect parallelized output
-        #c_op.collect_output(os.path.join(path_dict['input'], 'Final runs'))
+        c_op.collect_output(os.path.join(path_dict['input'], 'Final runs'))
         
         # analyzze final runs
         final_path = os.path.join(path_dict['input'], 'Final runs', 'results')
@@ -73,7 +73,7 @@ if True:
 
 
 # write final run output to excel
-#x = r'C:\Users\Vijeta\Documents\Projects\Brazil PrEP\Transmission runs\Input files\January\Successful basecase\Horizon of 60 months\Without incidence step\Status quo\results'
+#x = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA/Final runs/results'
 #link.export_output_to_excel(x, x)
 
 

@@ -39,6 +39,8 @@ def collect_output(path):
         
     # iterate through all paths
     for file in file_list:
+        if '.DS_Store' in file:
+            continue
         
         # collect .in file and .out file, respectively
         # .in
@@ -60,6 +62,6 @@ def collect_output(path):
         
 
 # mention path
-#path = r'C:\Users\Vijeta\Documents\Projects\Brazil PrEP\Transmission runs\Input files\January\Successful basecase\Horizon of 60 months\Without incidence step\Old CEPAC_Final runs'
+#path = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA/Final runs/results'
 #parallelize_input(path)
 #collect_output(path)

@@ -72,6 +72,14 @@ def import_perturbation_file(path):
 
     return float_df
 
+def read_cepac_in_file(filepath):
+    with open(filepath, 'r') as f2:
+        float_df = pd.DataFrame((f2.read()).split('\n'))
+    df_out = float_df[0].str.split(pat=None, n=-1, expand=True)
+    
+    return df_out
+    
+
 # TODO: changing (removing backslash) extension for it work on Mac
 def import_all_cepac_in_files(path, extensions = [r'*.in']):
     # setting up input data
