@@ -12,6 +12,8 @@ import pandas as pd
 import link_to_cepac_in_and_out_files as link
 import TextFileOperations as t_op
 import cluster_operations as c_op
+import DependentVarList as DepList
+from DependentVarList import VarDependencies as VarD
 import numpy as np
 from copy import deepcopy
 
@@ -71,45 +73,55 @@ class OneWaySA:
             raise ValueError('value_map input to the OneWaySA class should contain only one variable')
             return
         
-        # set attributes
-        self.var_list = np.array(value_map.keys())
-        self.val_list = value_map[self.var[0]]
-        self.save_path = os.path.join(save_path, 'OWSA_on var = '+ self.var_list[0])
+        # import in file
         self.base_in_file = link.read_cepac_in_file(file_path)
+        
+        # fill in missing data required for calculation of dependent variable
+        value_map = VarD().fill_blank_data(value_map, self.base_in_file)
+        
+        # set attributes
+        self.var_list = [i for i in value_map.keys()]
+        self.val_list = [value_map[i] for i in self.var_list]
+        self.val_map = value_map
+        self.save_path = os.path.join(save_path, 'OWSA_on var = '+ self.var_list[0])
+        if not os.path.exists(self.save_path):
+            os.makedirs(self.save_path)
         
         # save variable positions in '.in' file
         position = {}
         for var in self.var_list:
             position[var] = t_op.search_var(var, self.base_in_file)
         self.var_pos = position
-    
+        
+        
     def create_in_files(self, parallel = 1):
         
         # get list of var to replace, value and base in file
-        var = self.var[0]
-        val_list = self.val_list
+        var_list = self.var_list
+        val_map = self.val_map
         in_file = deepcopy(self.base_in_file)
         
         # loop over values we have for var
-        for val in val_list:
-            # this val can either be a float or array
-            if not (isinstance(val, float) or isinstance(val, int) or isinstance(val, np.array)):
-                raise TypeError('The value of variable for OWSA must be np.array/float/int')
-                return
+        for var in var_list:
+            for val in val_map[var]:
+                # this val can either be a float or array
+                if not (isinstance(val, float) or isinstance(val, int) or isinstance(val, np.array)):
+                    raise TypeError('The value of variable for OWSA must be np.array/float/int')
+                    return
+                
+                # replace variable value
+                in_file = t_op.replace_values(var, val, in_file, position = self.var_pos[var])
+                
+                # TODO: search dependencies of current variable and change those values
+                # in_file = find and replace dependent variables
+                
+                # save file
+                x = ('OWSA_' + var + '=%.4f' + '.in')%(val)
+                file_name = os.path.join(self.save_path, x)
+                link.write_cepac_in_file(file_name, in_file)
             
-            # replace variable value
-            in_file = t_op.replace_values(var, val, in_file, position = self.var_pos[var])
-            
-            # TODO: search dependencies of current variable and change those values
-            # in_file = find and replace dependent variables
-            
-            # save file
-            x = ('OWSA_' + var + '=%.4f' + '.in')%(val)
-            file_name = os.path.join(self.save_path, x)
-            link.write_cepac_in_file(file_name, in_file)
-        
-        # parallelize the files
-        c_op.parallelize_input(self.save_path, parallel)
+            # parallelize the files
+            c_op.parallelize_input(self.save_path, parallel)
         
         return
 
@@ -126,11 +138,20 @@ class TwoWaySA:
             raise ValueError('value_map input to the TwoWaySA class should contain only two variables')
             return
         
-        # set attributes
-        self.var_list = np.array(value_map.keys())
-        self.val_map = value_map
-        self.save_path = os.path.join(save_path, 'TWSA_on var1 = '+ self.var_list[0] + ' and var2 = ' + self.var_list[1])
+        # import in file
         self.base_in_file = link.read_cepac_in_file(file_path)
+        
+        # fill in missing data required for calculation of dependent variable
+        dep_map = VarD().fill_blank_data(value_map, self.base_in_file)
+        
+        # set attributes
+        self.var_list = [i for i in value_map.keys()]
+        self.val_list = [value_map[i] for i in self.var_list]
+        self.val_map = value_map
+        self.dep_map = dep_map
+        self.save_path = os.path.join(save_path, 'OWSA_on var = '+ self.var_list[0])
+        if not os.path.exists(self.save_path):
+            os.makedirs(self.save_path)
         
         # save variable positions in '.in' file
         position = {}
