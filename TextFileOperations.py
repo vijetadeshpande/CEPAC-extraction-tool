@@ -40,13 +40,16 @@ def expand_values(val, columns):
     
     return val_expanded
 
-def replace_values(var, val, in_file, expand_values = True):
+def replace_values(var, val, in_file, position = {}, expand_values = True):
     
     # avoid mutability
     in_file = deepcopy(in_file)
     
     # get index and column values to replace
-    val_place = search_var(var, in_file)
+    if position == {}:
+        val_place = search_var(var, in_file)
+    else:
+        val_place = position
     
     # check size of the value input and the columns
     size_match = (len(val) == len(val_place['columns']))
