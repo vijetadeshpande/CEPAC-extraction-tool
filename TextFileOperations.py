@@ -93,7 +93,11 @@ def read_values(var, in_file, position = {}):
             val.append(row_val)
     else:
         val = in_file.iloc[position['index'], position['columns']].values
-        
+    
+    # convert values to float
+    # TODO: if the currebt variable appears more than once, we take only the first array
+    # NEED TO FIX THIS
+    val = np.array(val[0]).astype(np.float)
     
     return val
 
@@ -104,32 +108,35 @@ def replace_values(var, val, in_file, position = {}, expand_values = True):
     
     # get index and column values to replace
     if position == {}:
-        val_place = search_var(var, in_file)
-    else:
-        val_place = position
+        position = search_var(var, in_file)
+        
+    # check if variable is present or not
+    if position['index'].size == 0:
+        print('\nVariable not found in .in file. Nothing is changed in .in file.')
+        return in_file
     
-    # check size of the value input and the columns
-    len_of_input = 0
-    if isinstance(val, float) or isinstance(val, int):
-        len_of_input = 1
-    else:
-        len_of_input = len(val)
-    size_match = (len_of_input == len(val_place['columns']))
-    
-    # check sizes       
-    if (not size_match) and (expand_values):
-        val = expand_value_to_array(val, val_place['columns'])
-    else:
-        raise ValueError('Size of variable values do not match the size of values present in CEPAC .in file')
-        return
-    
-    # replace
-    in_file.loc[val_place['index'], val_place['columns']] = val
+    #
+    idx = 0
+    for row in position['index']:
+        cols = position['columns'][idx]
+        # check size of the value input and the columns
+        len_of_input = 0
+        if isinstance(val, float) or isinstance(val, int):
+            len_of_input = 1
+        else:
+            len_of_input = len(val)
+        size_match = (len_of_input == len(cols))
+        
+        # check sizes       
+        if (not size_match) and (expand_values):
+            val = expand_value_to_array(val, cols)
+        
+        # replace
+        in_file.loc[row, cols] = val
+        
+        #
+        idx += 1
     
     return in_file
 
-def get_dependent_var(var):
-    
-    
-    return
 
