@@ -46,15 +46,15 @@ def save_line_plots(plot_dict, save_path):
     line_palette_3 = sb.color_palette("muted", n_colors = 3)
     '''
     def get_sq_val_at_last_month(col):
-        val = plot_dict['tx and inf'].loc[plot_dict['tx and inf']['Coverage level (%)'] == 0, col].values[t_sim-1]
+        val = plot_dict['tx and inf'].loc[plot_dict['tx and inf']['PrEP uptake (%)'] == 0, col].values[t_sim-1]
         return val
     
     # Transmissions
     df = plot_dict['tx and inf']
-    df = df.loc[df['Coverage level (%)'].isin([20, 30]), :]    
+    df = df.loc[df['PrEP uptake (%)'].isin([20, 30]), :]    
     plt.figure()
-    g = sb.FacetGrid(df, col="Coverage level (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
-    g = (g.map(sb.lineplot, "t (simulation month)", "Number of transmissions", "Coverage time (months)", alpha = line_alpha, palette = line_palette_r).add_legend())#, "WellID")
+    g = sb.FacetGrid(df, col="PrEP uptake (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
+    g = (g.map(sb.lineplot, "t (simulation month)", "Number of transmissions", "Time to max. uptake (months)", alpha = line_alpha, palette = line_palette_r).add_legend())#, "WellID")
     #ax1, ax2, ax3 = g.axes[0]
     ax1, ax2 = g.axes[0]
     status_quo_tx_val = get_sq_val_at_last_month('Number of transmissions')
@@ -67,8 +67,8 @@ def save_line_plots(plot_dict, save_path):
     
     # Infections    
     plt.figure()
-    g = sb.FacetGrid(df, col="Coverage level (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
-    g = (g.map(sb.lineplot, "t (simulation month)", "Number of infections", "Coverage time (months)", alpha = line_alpha, palette = line_palette_r).add_legend())#, "WellID")
+    g = sb.FacetGrid(df, col="PrEP uptake (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
+    g = (g.map(sb.lineplot, "t (simulation month)", "Number of infections", "Time to max. uptake (months)", alpha = line_alpha, palette = line_palette_r).add_legend())#, "WellID")
     #ax1, ax2, ax3 = g.axes[0]
     ax1, ax2 = g.axes[0]
     status_quo_inf_val = get_sq_val_at_last_month('Number of infections')
@@ -83,8 +83,8 @@ def save_line_plots(plot_dict, save_path):
     
     # incidence rate  
     plt.figure()
-    g = sb.FacetGrid(df, col="Coverage level (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
-    g = (g.map(sb.lineplot, "t (simulation month)", "Incidence rate (per 100PY)", "Coverage time (months)", alpha = line_alpha, palette = line_palette_r).add_legend())#, "WellID")
+    g = sb.FacetGrid(df, col="PrEP uptake (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
+    g = (g.map(sb.lineplot, "t (simulation month)", "Incidence rate (per 100PY)", "Time to max. uptake (months)", alpha = line_alpha, palette = line_palette_r).add_legend())#, "WellID")
     #ax1, ax2, ax3 = g.axes[0]
     ax1, ax2 = g.axes[0]
     status_quo_inci_val = get_sq_val_at_last_month('Incidence rate (per 100PY)')
@@ -97,36 +97,36 @@ def save_line_plots(plot_dict, save_path):
     
     # incidence rate
     df = plot_dict['tx and inf']
-    df = df.loc[df['Coverage level (%)'].isin([0, 10, 20, 30]), :] 
-    df = df.loc[df['Coverage time (months)'].isin([24, 60]), :]
+    df = df.loc[df['PrEP uptake (%)'].isin([0, 10, 20, 30]), :] 
+    df = df.loc[df['Time to max. uptake (months)'].isin([24, 60]), :]
     plt.figure()
-    g = sb.FacetGrid(df, col="Coverage time (months)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
-    g = (g.map(sb.lineplot, "t (simulation month)", "Incidence rate (per 100PY)", "Coverage level (%)", alpha = line_alpha, palette = line_palette).add_legend())#, "WellID")
+    g = sb.FacetGrid(df, col="Time to max. uptake (months)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
+    g = (g.map(sb.lineplot, "t (simulation month)", "Incidence rate (per 100PY)", "PrEP uptake (%)", alpha = line_alpha, palette = line_palette).add_legend())#, "WellID")
     plt.savefig(os.path.join(save_path, r'Incidence rate1'), dpi = 360)
     del g
         
     # redefine frame
     df = plot_dict['tx and inf']
-    df = df.loc[df['Coverage level (%)'].isin([0, 10, 20, 30]), :]
-    df = df.loc[df['Coverage time (months)'].isin([24, 60]), :]
+    df = df.loc[df['PrEP uptake (%)'].isin([0, 10, 20, 30]), :]
+    df = df.loc[df['Time to max. uptake (months)'].isin([24, 60]), :]
     
     # Transmissions    
     plt.figure()
-    g = sb.FacetGrid(df, col="Coverage time (months)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
-    g = (g.map(sb.lineplot, "t (simulation month)", "Number of transmissions", "Coverage level (%)", alpha = line_alpha, palette = line_palette).add_legend())#, "WellID")
+    g = sb.FacetGrid(df, col="Time to max. uptake (months)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
+    g = (g.map(sb.lineplot, "t (simulation month)", "Number of transmissions", "PrEP uptake (%)", alpha = line_alpha, palette = line_palette).add_legend())#, "WellID")
     plt.savefig(os.path.join(save_path, r'Transmissions1'), dpi = 360)
     del g
     
     # Infections    
     plt.figure()
-    g = sb.FacetGrid(df, col="Coverage time (months)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
-    g = (g.map(sb.lineplot, "t (simulation month)", "Number of infections", "Coverage level (%)", alpha = line_alpha, palette = line_palette).add_legend())#, "WellID")
+    g = sb.FacetGrid(df, col="Time to max. uptake (months)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
+    g = (g.map(sb.lineplot, "t (simulation month)", "Number of infections", "PrEP uptake (%)", alpha = line_alpha, palette = line_palette).add_legend())#, "WellID")
     plt.savefig(os.path.join(save_path, r'Infections1'), dpi = 360)
     del g
 
 def extract_percentage_decline_value(df, cov, cov_t):
-    cov_idx = df.index[df.loc[:, 'Coverage level (%)'] == np.floor(cov)].values
-    cov_t_idx = df.index[df.loc[:, 'Coverage time (months)'] == np.floor(cov_t)].values
+    cov_idx = df.index[df.loc[:, 'PrEP uptake (%)'] == np.floor(cov)].values
+    cov_t_idx = df.index[df.loc[:, 'Time to max. uptake (months)'] == np.floor(cov_t)].values
     idx = set(cov_idx).intersection(set(cov_t_idx)).pop()
 
     return df.loc[idx, 'Percentage reduction in incidence rate']
@@ -137,7 +137,7 @@ def save_heatmaps(plot_dict, save_path, label):
     df = plot_dict["percentage reduction"]
     # surface plot
     percentage_decline = df['Percentage reduction in incidence rate']
-    val = {'PrEPCoverage': np.sort(df['Coverage level (%)'].unique()), 'PrEPDuration': np.sort(df['Coverage time (months)'].unique())}
+    val = {'PrEPCoverage': np.sort(df['PrEP uptake (%)'].unique()), 'PrEPDuration': np.sort(df['Time to max. uptake (months)'].unique())}
     x_grid, y_grid = np.meshgrid(val['PrEPDuration'], val['PrEPCoverage'])
     x = np.ravel(x_grid)
     y = np.ravel(y_grid)
@@ -145,13 +145,13 @@ def save_heatmaps(plot_dict, save_path, label):
     for i in range(len(x)):
         z.append(extract_percentage_decline_value(plot_dict['percentage reduction'], y[i], x[i]))
     sb_heatmap = pd.DataFrame()
-    sb_heatmap['PrEP coverage time (months)'] = np.floor(x)
-    sb_heatmap['PrEP coverage (%)'] = np.floor(y)
+    sb_heatmap['Time to max. uptake (months)'] = np.floor(x).astype(int)
+    sb_heatmap['PrEP uptake (%)'] = np.floor(y).astype(int)
     sb_heatmap['Percentage declination in incidence'] = z
-    sb_heatmap = sb_heatmap.sort_values(by = 'PrEP coverage time (months)')
+    sb_heatmap = sb_heatmap.sort_values(by = 'Time to max. uptake (months)')
     heatmap_df = pd.pivot(data = sb_heatmap,
-                       index = 'PrEP coverage time (months)',
-                       columns = 'PrEP coverage (%)',
+                       index = 'Time to max. uptake (months)',
+                       columns = 'PrEP uptake (%)',
                        values = 'Percentage declination in incidence')
     
     # choose color theme
@@ -204,11 +204,11 @@ def create_plot_df(cepac_out):
     # in plot generation. Hence, I have copied and pasted same values of SQ
     # in different coverage time values
     df = pd.DataFrame(0, index = np.arange(0, (len(cepac_out) + 3)*t_sim), 
-                      columns = ['Coverage level (%)', 'Coverage time (months)', 't (simulation month)', 
+                      columns = ['PrEP uptake (%)', 'Time to max. uptake (months)', 't (simulation month)', 
                                  'Number of infections', 'Number of transmissions', 'Incidence rate (per 100PY)',
                                  'Cumulative number of infections', 'Cumulative number of transmissions'])
     df_per_red = pd.DataFrame(0, index = np.arange(0, len(cepac_out)-1), 
-                              columns = ['Coverage level (%), Coverage time (months)',
+                              columns = ['PrEP uptake (%), Time to max. uptake (months)',
                                          'Percentage reduction in incidence rate']) 
     # iterate over files
     row_idx = 0
@@ -222,10 +222,10 @@ def create_plot_df(cepac_out):
         df.loc[row_idx: row_idx + t_sim-1, 'Number of transmissions'] = cepac_out[file]['transmissions'].loc[0: t_sim-1].values
         df.loc[row_idx: row_idx + t_sim-1, 'Cumulative number of transmissions'] = cepac_out[file]['transmissions'].loc[0: t_sim-1].cumsum().values
         df.loc[row_idx: row_idx + t_sim-1, 'Incidence rate (per 100PY)'] = cepac_out[file]['incidence rate'].loc[0: t_sim-1].values
-        df.loc[row_idx: row_idx + t_sim-1, 'Coverage level (%)'] = aux.get_coverage_level_from_file_name(file)
-        df.loc[row_idx: row_idx + t_sim-1, 'Coverage time (months)'] = aux.get_coverage_time_from_file_name(file)
-        df_per_red.loc[row_idx/t_sim, 'Coverage level (%)'] = aux.get_coverage_level_from_file_name(file)
-        df_per_red.loc[row_idx/t_sim, 'Coverage time (months)'] = aux.get_coverage_time_from_file_name(file)
+        df.loc[row_idx: row_idx + t_sim-1, 'PrEP uptake (%)'] = aux.get_coverage_level_from_file_name(file)
+        df.loc[row_idx: row_idx + t_sim-1, 'Time to max. uptake (months)'] = aux.get_coverage_time_from_file_name(file)
+        df_per_red.loc[row_idx/t_sim, 'PrEP uptake (%)'] = aux.get_coverage_level_from_file_name(file)
+        df_per_red.loc[row_idx/t_sim, 'Time to max. uptake (months)'] = aux.get_coverage_time_from_file_name(file)
         df_per_red.loc[row_idx/t_sim, 'Percentage reduction in incidence rate'] = calculate_percentage_reduction(cepac_out['SQ']['incidence rate'], cepac_out[file]['incidence rate'], t_sim)
         #df.loc[row_idx: row_idx + t_sim-1, 'Coverage level (%)'] = 0
         #df.loc[row_idx: row_idx + t_sim-1, 'Coverage time (months)'] = 0
@@ -236,7 +236,7 @@ def create_plot_df(cepac_out):
     # for SQ we'll put same values for all coverage and coverage time values
     # plotting is easier this way
     file = 'SQ'
-    for cov_t in df_per_red['Coverage time (months)'].unique():
+    for cov_t in df_per_red['Time to max. uptake (months)'].unique():
         # tx and inf out
         df.loc[row_idx: row_idx + t_sim-1, 't (simulation month)'] = np.arange(0, t_sim)
         df.loc[row_idx: row_idx + t_sim-1, 'Number of infections'] = cepac_out[file]['infections'].loc[0:t_sim-1].values
@@ -244,14 +244,14 @@ def create_plot_df(cepac_out):
         df.loc[row_idx: row_idx + t_sim-1, 'Number of transmissions'] = cepac_out[file]['transmissions'].loc[0: t_sim-1].values
         df.loc[row_idx: row_idx + t_sim-1, 'Cumulative number of transmissions'] = cepac_out[file]['transmissions'].loc[0: t_sim-1].cumsum().values
         df.loc[row_idx: row_idx + t_sim-1, 'Incidence rate (per 100PY)'] = cepac_out[file]['incidence rate'].loc[0: t_sim-1].values
-        df.loc[row_idx: row_idx + t_sim-1, 'Coverage level (%)'] = 0
-        df.loc[row_idx: row_idx + t_sim-1, 'Coverage time (months)'] = cov_t
+        df.loc[row_idx: row_idx + t_sim-1, 'PrEP uptake (%)'] = 0
+        df.loc[row_idx: row_idx + t_sim-1, 'Time to max. uptake (months)'] = cov_t
         
         # increase row idx
         row_idx += t_sim
             
     # save df in dict
-    df['Coverage time (months)'] = df['Coverage time (months)'].astype('int64')
+    df['Time to max. uptake (months)'] = df['Time to max. uptake (months)'].astype('int64')
     final_out['tx and inf'] = df
     final_out['percentage reduction'] = df_per_red
             
@@ -282,4 +282,4 @@ def analyze_final_output(path_inv, path_sq):
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    save_heatmaps(plot_dict, save_path, 'Percentage reduction in incidence \ndue to both benefits')
+    save_heatmaps(plot_dict, save_path, 'Percentage reduction in incidence')
