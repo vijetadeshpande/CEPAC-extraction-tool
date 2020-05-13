@@ -70,8 +70,19 @@ def search_var(var, in_file):
     
     return out_dict
 
-def expand_value_to_array(val, columns):
-    val_expanded = val * np.ones(len(columns))
+def expand_value_to_array(val, ref_shape):
+    
+    val_expanded = np.multiply(val, np.ones(ref_shape))
+    '''
+    # expand array according to mismatch
+    if available_dim == 1:
+        val_expanded = np.multiply(val, np.ones(ref_shape))
+    elif available_dim == ref_shape[1]:
+        val_expanded = np.multiply(val, np.ones((ref_shape[0], )))
+    else:
+        raise ValueError('Dimension mismatch: While expanding the input value to the reference dimension')
+
+    '''
     
     return val_expanded
 
@@ -116,26 +127,23 @@ def replace_values(var, val, in_file, position = {}, expand_values = True):
         return in_file
     
     #
-    idx = 0
-    for row in position['index']:
-        cols = position['columns'][idx]
-        # check size of the value input and the columns
-        len_of_input = 0
-        if isinstance(val, float) or isinstance(val, int):
-            len_of_input = 1
-        else:
-            len_of_input = len(val)
-        size_match = (len_of_input == len(cols))
-        
-        # check sizes       
-        if (not size_match) and (expand_values):
-            val = expand_value_to_array(val, cols)
-        
-        # replace
-        in_file.loc[row, cols] = val
-        
-        #
-        idx += 1
+    rows = position['index']
+    cols = position['columns'][0]
+    
+    # check size of the value input and the columns
+    shape_of_input = 0
+    if isinstance(val, (float, int, np.int64, np.float64, np.int32, np.float32)):
+        shape_of_input = (1, 1)
+    else:
+        shape_of_input = val.shape
+    
+    # check sizes       
+    if (shape_of_input != (len(rows), len(cols))) and (expand_values):
+        val = expand_value_to_array(val, (len(rows), len(cols)))
+    
+    # replace
+    in_file.loc[rows, cols] = val
+
     
     return in_file
 

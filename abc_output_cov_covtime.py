@@ -100,10 +100,10 @@ def write_final_runs(value_grid, path_dict):
         # reduction coefficient will be as follows
         if ((0.01*percentage_red) < 1) and (percentage_red > 0):
             red_coeff = -1*stop_time/(np.log(1 - (0.01*percentage_red)))
-        elif (percentage_red == 0) or (percentage_red == 0.0):
+        elif (percentage_red <= 0) or (percentage_red <= 0.0):
             red_coeff = 10000
         else:
-            # this says percentage reduction is almost 100%
+            # this says percentage reduction is >= 100%
             red_coeff = -1*stop_time/np.log(10**-100)
         
         return red_coeff
@@ -207,7 +207,7 @@ def write_final_runs(value_grid, path_dict):
         
         # disable dynamic transmission module
         # TODO: we need to take care that the values for risk multiplier are correct
-        float_int.loc[idx["UseDynamicTransmission"], 1] = 0
+        float_int.loc[idx["UseDynamicTransmission"], 1] = 1
         
         # replace coverage and coverage time
         float_int.loc[idx["PrEPCoverage"], 1:2] = 0.01*(aux.get_coverage_level_from_file_name(name_map[run]))

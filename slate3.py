@@ -32,13 +32,14 @@ import link_to_cepac_in_and_out_files as link
 if True:
     # path to import in files
     path_dict = {}
-    path_dict['input'] = r"/Users/vijetadeshpande/Downloads/MPEC/Brazil/Salvador/2-way SA"
+    path_dict['input'] = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Manaus/2-way SA' #r"/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA"
     path_dict['output'] = {}
     path_dict['output']['intervention'] = os.path.join(path_dict["input"], "Positive coverage runs")
     path_dict['output']['status quo'] = os.path.join(path_dict["input"], "Status quo")
     
     # find and replace following variable
     var_to_replace = {'PrEPCoverage': np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6]), 'PrEPDuration': np.array([24, 36, 48, 60])}
+    #var_to_replace = {'PrEPCoverage': np.array([0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6]), 'PrEPDuration': np.array([24, 36, 48, 60])}
     #{'PrEPCoverage': np.array([0, 0.07, 0.15, 0.22, 0.30]), 'PrEPDuration': np.array([6, 19, 33, 46, 60])} 
     #{'PrEPCoverage': np.array([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6]), 'PrEPDuration': np.array([24, 36, 48, 60])} # 
     
@@ -47,10 +48,13 @@ if True:
         # collect parallelized output
         c_op.collect_output(os.path.join(path_dict['input'], 'Final runs'))
         
-        # analyzze final runs
+        # calculate percentage reduction in incidence rate and plot all the results
         final_path = os.path.join(path_dict['input'], 'Final runs', 'results')
         sq_path = os.path.join(path_dict['output']['status quo'], 'results')
         abc_final.analyze_final_output(final_path, sq_path)
+        
+        # write excel file for the CEPAC output
+        link.export_output_to_excel(final_path, final_path)
     
     elif os.path.exists(path_dict['output']['intervention']):
         # collect parallelized output
@@ -73,7 +77,8 @@ if True:
 
 
 # write final run output to excel
-#x = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA/Final runs/results'
+#x = os.path.join(path_dict['input'], r'Final runs', r'results')
+#x = r'/Users/vijetadeshpande/Documents/GitHub/Sequence2Sequence model for CEPAC prediction/test check/results'
 #link.export_output_to_excel(x, x)
 
 

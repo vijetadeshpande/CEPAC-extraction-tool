@@ -17,7 +17,6 @@ import link_to_cepac_in_and_out_files as link
 def get_transmission_rate_multiplier(path):
     
     #%% calculations for transmission rate multiplier inside cohort
-    
     def get_m_bar_tx_inside(path):
         
         # read data
@@ -60,7 +59,6 @@ def get_transmission_rate_multiplier(path):
                 'hiv_pop': hiv_pop}
     
     #%% calculations for transmission rate multiplier outside cohort
-    
     def get_m_bar_tx_outside(path):
         # read data
         #d_in = get_meta_analysis_results(path)
@@ -137,7 +135,6 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
         
         return p_end
     
-    
     """
     # function to calculate end month probability
     def calculate_end_p(val, denominator = False):
@@ -200,6 +197,15 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
     # coefficient
     coeff = -1*prep_duration/(np.log(1 - step_6))
     
+    # check
+    check = (((inf['RunA'] - tx['RunA']) < 0) or ((inf['RunB'] - tx['RunB']) < 0) or ((inf['RunC'] - tx['RunC']) < 0))
+    if check:
+        print('wrong')
+    """
+    check = inf['RunA'] - tx['RunA']
+    if check < 0:
+        print('wrong')
+    """    
     
     return percentage_decline
 

@@ -18,10 +18,54 @@ import math
 #from joblib import Parallel, delayed
 import multiprocessing
 import abc_auxilliaries as aux
-
+from matplotlib.font_manager import FontProperties
+from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import FuncFormatter
 
 #
 cohort_size = 10000000
+def save_scatter_plots(plot_df, save_path):
+    xs = [12, 24, 36, 48, 60]
+    def format_fn(tick_val, tick_pos):
+        if int(tick_val) in xs:
+            return int(tick_val)
+        else:
+            return ''
+    
+    # new column with 'which target is achieved'
+    plot_df['Which target is achieved in 5 years'] = 'None'
+    plot_df['Time to max. uptake (years)'] = 0
+    plot_df['Time to max. uptake (years)'] = plot_df['Time to max. uptake (years)'].values.astype(int)
+    for idx in plot_df.index:
+        plot_df['Time to max. uptake (years)'].iloc[idx] = int(plot_df['Time to max. uptake (months)'].iloc[idx])
+        if plot_df['Percentage reduction in incidence rate'].iloc[idx] < 50:
+            plot_df['Which target is achieved in 5 years'].iloc[idx] = 'None'
+        elif plot_df['Percentage reduction in incidence rate'].iloc[idx] < 75:
+            plot_df['Which target is achieved in 5 years'].iloc[idx] = '50% reduction in incidence rate'
+        else:
+            plot_df['Which target is achieved in 5 years'].iloc[idx] = '75% reduction in incidence rate'
+    
+    # plot
+    sb.set_style("dark", {"axes.facecolor": "0.97"})
+    #sb.set_context("notebook", rc={"lines.linewidth": 0.1}, font_scale = 1.2)
+    fig, ax = plt.subplots()
+    #fig.set_figheight(1)
+    #fig.set_figwidth(2)
+    scatter_plot = sb.scatterplot(plot_df['PrEP uptake (%)'], plot_df['Time to max. uptake (months)'], 
+                                          hue = plot_df['Which target is achieved in 5 years'],
+                                          s = 300,
+                                          legend = False)
+    # Put the legend out of the figure
+    #lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    #ax.yaxis.set_major_locator(plt.MaxNLocator(4))
+    ax.yaxis.set_major_formatter(FuncFormatter(format_fn))
+    ax.yaxis.set_major_locator(plt.MaxNLocator(integer = True))
+    plt.savefig(os.path.join(save_path, r'Target scatter plot'), 
+                #bbox_extra_artists=(lgd,), 
+                #bbox_inches='tight',
+                dpi = 720)
+    
+    return 
 
 def save_line_plots(plot_dict, save_path):
     
@@ -208,7 +252,7 @@ def create_plot_df(cepac_out):
                                  'Number of infections', 'Number of transmissions', 'Incidence rate (per 100PY)',
                                  'Cumulative number of infections', 'Cumulative number of transmissions'])
     df_per_red = pd.DataFrame(0, index = np.arange(0, len(cepac_out)-1), 
-                              columns = ['PrEP uptake (%), Time to max. uptake (months)',
+                              columns = ['PrEP uptake (%)', 'Time to max. uptake (months)',
                                          'Percentage reduction in incidence rate']) 
     # iterate over files
     row_idx = 0
@@ -254,7 +298,6 @@ def create_plot_df(cepac_out):
     df['Time to max. uptake (months)'] = df['Time to max. uptake (months)'].astype('int64')
     final_out['tx and inf'] = df
     final_out['percentage reduction'] = df_per_red
-            
     
     return final_out
     
@@ -283,3 +326,11 @@ def analyze_final_output(path_inv, path_sq):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     save_heatmaps(plot_dict, save_path, 'Percentage reduction in incidence')
+    # scatter
+    folder_name = 'Scatter plots for CEPAC output'
+    save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    save_scatter_plots(plot_dict['percentage reduction'], save_path)
+    
+    return

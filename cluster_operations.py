@@ -81,6 +81,6 @@ def collect_output(path, parallel = 1):
         
 
 # mention path
-#path = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/TEST CODE/parallelize this'
+#path = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Scaling down transmission rates/new_files'
 #parallelize_input(path, 2)
 #collect_output(path)
