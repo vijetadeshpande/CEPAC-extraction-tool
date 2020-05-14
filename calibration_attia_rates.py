@@ -43,7 +43,7 @@ filepath = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Scaling down transmiss
 in_file = link.import_all_cepac_in_files(filepath)
 
 # create folder for new in files
-filepath_new = os.path.join(filepath, 'Sample') #'SA_percentage on '
+filepath_new = os.path.join(filepath, 'SA on tx attributable factor') #'SA_percentage on '
 if not os.path.exists(filepath_new):
     os.makedirs(filepath_new)
     
@@ -190,13 +190,47 @@ def SA_testing(values):
     
     # parallelize files
     c_op.parallelize_input(filepath_new)
+    
+    return
 
+def SA_tx_att_hrg(values):
+    
+    replace_var = ['TransmissionRateOnART', 'TransmissionRateOffART', 'DynamicTransmissionPropHRGAttrib']
+    replace_val = {}
+    for city in ['rio', 'salvador', 'manaus']:
+        for k in values:# this is  to vary % on ART
+            
+            # multiply to attia
+            attia_on_ART = np.multiply(parameters['attia on ART'], 1)
+            attia_off_ART = np.multiply(parameters['attia off ART'], 1)
+            replace_val['TransmissionRateOnART'] = np.multiply(np.reshape(attia_on_ART, (8, 1)), np.ones((8, 6)))
+            replace_val['TransmissionRateOffART'] = np.multiply(np.reshape(attia_off_ART, (8, 1)), np.ones((8, 6)))
+            
+            # the percentage attributable to hrg
+            replace_val['DynamicTransmissionPropHRGAttrib'] = k
+            
+            # replace values in .in file
+            float_df = deepcopy(in_file[city])
+            
+            # replace the variables
+            for var in replace_var:
+                float_df = t_op.replace_values(var, replace_val[var], float_df)
+                
+            # save float_df
+            filename = os.path.join(filepath_new, city + '_att_to_hrg_' + str(k) + '.in')
+            link.write_cepac_in_file(filename, float_df)
+    
+    # parallelize files
+    c_op.parallelize_input(filepath_new)
+    
+    return
+            
 # SA on scaling down attia rates
 
 
 # SA on percentage on treatment
-values = [0.73, 0.71, 0.70]
-SA_treatment(values)
+#values = [0.73, 0.71, 0.70]
+#SA_treatment(values)
 
 # SA on acute transmission rate
 #values = [10, 15, 20, 25, 30, 40, 62.5]
@@ -205,6 +239,10 @@ SA_treatment(values)
 # SA on testing parameter
 #values = [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.009, 0.01, 0.015]
 #SA_testing(values)
+
+# SA on transmissions attributable to HRG
+values = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+SA_tx_att_hrg(values)
 
 #
 #path = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Scaling down transmission rates/Pooyan suggested run'
