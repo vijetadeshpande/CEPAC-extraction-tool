@@ -58,7 +58,7 @@ if True:
     
     elif os.path.exists(path_dict['output']['intervention']):
         # collect parallelized output
-        c_op.collect_output(os.path.join(path_dict['output']['intervention']))
+        #c_op.collect_output(os.path.join(path_dict['output']['intervention']))
         
         # write all final run files
         abc_output.write_final_runs(var_to_replace, path_dict)
@@ -78,7 +78,7 @@ if True:
 
 # write final run output to excel
 #x = os.path.join(path_dict['input'], r'Final runs', r'results')
-#x = r'/Users/vijetadeshpande/Documents/GitHub/Sequence2Sequence model for CEPAC prediction/test check/results'
+#x = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA_40%/Status quo/results'
 #link.export_output_to_excel(x, x)
 
 

@@ -158,7 +158,7 @@ def write_final_runs(value_grid, path_dict):
                 out[j_idx]["C"] = cepac_out["status quo"]["SQ"]
                 inp[j_idx] = inp[5]
             inp[row_idx]['PrEPCoverage'] = i
-            inp[row_idx]['PrEPDuration'] = 60 #600
+            inp[row_idx]['PrEPDuration'] = 120 #60 #600
             percentage_decline.append(tx_algo.get_percentage_decline(out[row_idx], inp[row_idx]))
             row_idx += 1
     
@@ -194,7 +194,7 @@ def write_final_runs(value_grid, path_dict):
         float_int = deepcopy(base_int)
         
         # following value of stop time might not be correct
-        float_int.loc[idx["HIVIncidReductionStopTime"], 1] = 60 #480#120
+        float_int.loc[idx["HIVIncidReductionStopTime"], 1] = 120 #480#120
         coeff = get_reduction_coeff(percentage_decline[run], float_int.loc[idx["HIVIncidReductionStopTime"], 1].values[0])
         if coeff <= 0:
             # disable incidence reduction 

@@ -176,9 +176,44 @@ def import_all_cepac_out_files(path, module = '', sensitivity_module = False, tr
                         data[float_name][name_dict[k]] = data[float_name][k]
                         del data[float_name][k]
                     del f_dict
-                else:
+                elif module == 'treatment':
+                    
+                    # define variables to extract
+                    #var = [r'HIV+undetected', r'HIV+unlinked(detected not in care', r'HIV+in_care', r'HIV+LTFU', r'HIV+RTC']
+                    var = [r'#_Alive:', r'#_Deaths:', r'Total_HIV+']
+                    data[float_name] = {}
+                    
+                    # where to find
+                    monthly = True
+                    overall = False
+                    
+                    # take subset of data
+                    if 'pop' in float_name:
+                        continue
+                    
+                    # get subset
+                    data[float_name] = get_subset_of_out_file(float_df, var, overall, monthly)
+                    
+                    # key name adjustments
+                    #name_dict = {"HIV+undetected"                   : "HIV positive undetected",
+                    #             "HIV+unlinked(detected not in care": "HIV positive not linked to care",
+                    #             "HIV+in_care"                      : "HIV positive in care",
+                    #             "HIV+LTFU"                         : "HIV positive LTFU",
+                    #             "HIV+RTC"                          : "HIV positive RTC"}
+                    name_dict = {'#_Alive:': 'Alive', '#_Deaths:': 'Deaths', 'Total_HIV+': 'Total HIV+'}
+                    
+                    
+                    # TODO: in following loop for replacing the dictionary keys, loop goes over keys twice,
+                    # one over all old values and one time over new values. This adds uneccessary computations
+                    f_dict = deepcopy(data[float_name])
+                    for k in f_dict.keys():
+                        data[float_name][name_dict[k]] = data[float_name][k]
+                        del data[float_name][k]
+                    del f_dict
+                    
+                    
                     # if no module name is mentioned, raw data will be the output
-                    data[float_name] = float_df
+                    #data[float_name] = float_df
 
                 
             elif ex == r'\*.txt':
@@ -318,17 +353,20 @@ def get_subset_of_out_file(df, var_name = [], overall = False, monthly = False):
                 idx = df.loc[df.iloc[:,0] == var].index.values
                 if var == r'Primary_Transmissions_by_True_HVL_':
                     col_n = 8
-                elif var in [r'Self_Transmission_Rate_Multiplier']:
+                elif var in [r'Self_Transmission_Rate_Multiplier', r'Total_HIV+']:
                     col_n = 1
                 elif var in [r'Incident_Infections', r'HIV-_at_Month_Start']:
                     col_n = 2 # this value should be = 1, if we want warm-up run values
                 else:
-                    sys.exit("Variable name in subsetting function in link is not correct")
+                    col_n = df.columns
                 
                 # adjustments    
                 float_df = df.iloc[idx, col_n]
-                float_df = float_df.str.strip(r'_')
-                float_df = pd.to_numeric(float_df)
+                try: 
+                    float_df = float_df.str.strip(r'_')
+                    float_df = pd.to_numeric(float_df)
+                except:
+                    pass
                 float_df = float_df.reset_index(drop = True)
                 
                 # store values

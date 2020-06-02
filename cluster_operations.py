@@ -16,6 +16,7 @@ def parallelize_input(path, parallel = 1):
     
     # get list of directories
     file_list = os.listdir(path)
+    file_list.sort()
     
     # using numbers to name the folder
     folder_name = 0

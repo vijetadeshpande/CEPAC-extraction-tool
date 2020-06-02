@@ -13,6 +13,7 @@ import link_to_cepac_in_and_out_files as link
 import cluster_operations as c_op
 from copy import deepcopy
 import os
+from scipy.stats import truncnorm
 
 parameters = {'attia off ART': np.array([9.03, 8.12, 8.12, 4.17, 2.06, 0.16, 0, 62.56]),
               'attia on ART': np.array([9.03, 8.12, 8.12, 4.17, 2.06, 0.16, 0, 9.03]),
@@ -39,7 +40,7 @@ parameters = {'attia off ART': np.array([9.03, 8.12, 8.12, 4.17, 2.06, 0.16, 0, 
               }
 
 # import all .in files
-filepath = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Scaling down transmission rates'
+filepath = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/SA on control levers'
 in_file = link.import_all_cepac_in_files(filepath)
 
 # create folder for new in files
@@ -224,7 +225,38 @@ def SA_tx_att_hrg(values):
     c_op.parallelize_input(filepath_new)
     
     return
-            
+
+def calculate_average_tx_rate(on_ART, parameters):
+    
+    avg_rate = np.zeros((len(on_ART), ))
+    idx = -1
+    for val in on_ART:
+        idx += 1
+        community_VL = np.multiply(val, parameters['viral load distribution on ART']) + np.multiply((1 - val), parameters['viral load distribution off ART'])
+        weighted_avg = np.sum(np.multiply(community_VL, parameters['attia off ART']))
+        avg_rate[idx] = weighted_avg
+    
+    return np.mean(avg_rate), np.std(avg_rate)
+
+
+def take_samples(lower, upper, mu, sigma, sample_n = 1000000):
+    # define distribution parameters
+    a = (lower - mu)/sigma
+    b = (upper - mu)/sigma
+    
+    # define distribution object
+    dist = truncnorm(a, b, loc = mu, scale = sigma)
+    
+    # take samples
+    samples = dist.rvs(sample_n) 
+    
+    return samples
+
+       
+# sample on treatment values
+#on_treat = take_samples(0.3, 0.9, 0.5, 0.2)
+#mean_rate, sd_rate = calculate_average_tx_rate(on_treat, parameters)
+     
 # SA on scaling down attia rates
 
 
@@ -241,11 +273,16 @@ def SA_tx_att_hrg(values):
 #SA_testing(values)
 
 # SA on transmissions attributable to HRG
-values = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+values = [0.7, 0.8]
 SA_tx_att_hrg(values)
 
 #
-#path = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Scaling down transmission rates/Pooyan suggested run'
+#path = filepath_new
 #c_op.parallelize_input(path, 2)
 #c_op.collect_output(path)
 #link.export_output_to_excel(os.path.join(path, 'results'), os.path.join(path, 'results'))
+
+
+#
+#aaa = link.import_all_cepac_out_files(os.path.join(filepath_new + '_40 years', 'results'),
+#                                      module = 'treatment')
