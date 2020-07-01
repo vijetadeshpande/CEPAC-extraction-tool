@@ -25,21 +25,24 @@ def get_non_na_columns(index, in_file):
     
     # find starting index of a value
     for s_idx in cols:
-        if row.iloc[s_idx].isalpha():
-            continue
-        elif row.iloc[s_idx].isdigit():
-            break
-        else:
-            parts = row.iloc[s_idx].split('.')
-            cond = True
-            for i in parts:
-                i = re.sub(r'E-', '', i)
-                cond = (cond and i.isdigit())
-            if cond:
+        if isinstance(row.iloc[s_idx], str):
+            if row.iloc[s_idx].isalpha():
+                continue
+            elif row.iloc[s_idx].isdigit():
                 break
             else:
-                continue
-    
+                parts = row.iloc[s_idx].split('.')
+                cond = True
+                for i in parts:
+                    i = re.sub(r'E-', '', i)
+                    cond = (cond and i.isdigit())
+                if cond:
+                    break
+                else:
+                    continue
+        elif isinstance(row.iloc[s_idx], int) or isinstance(row.iloc[s_idx], float):
+            break
+        
     # only return column number which contain numbers only
     cols = cols[s_idx:]
     
@@ -112,7 +115,7 @@ def read_values(var, in_file, position = {}):
     
     return val
 
-def replace_values(var, val, in_file, position = {}, expand_values = True):
+def replace_values(var, val, in_file, position = {}, expand_values = True, valtype = float):
     
     # avoid mutability
     in_file = deepcopy(in_file)
@@ -123,7 +126,7 @@ def replace_values(var, val, in_file, position = {}, expand_values = True):
         
     # check if variable is present or not
     if position['index'].size == 0:
-        print('\nVariable not found in .in file. Nothing is changed in .in file.')
+        #print('\nVariable not found in .in file. Nothing is changed in .in file.')
         return in_file
     
     #
@@ -142,7 +145,10 @@ def replace_values(var, val, in_file, position = {}, expand_values = True):
         val = expand_value_to_array(val, (len(rows), len(cols)))
     
     # replace
-    in_file.loc[rows, cols] = val
+    try:
+        in_file.loc[rows, cols] = val.astype(valtype)
+    except:
+        in_file.loc[rows, cols] = val
 
     
     return in_file

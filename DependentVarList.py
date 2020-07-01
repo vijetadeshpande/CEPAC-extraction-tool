@@ -150,7 +150,7 @@ class DepData:
         
         # check if there is any dependency
         if not var in self.var_having_dep:
-            print(('\n%s does not have any dependent variables.')%(var))
+            #print(('\n%s does not have any dependent variables.')%(var))
             return in_file
         
         # list of dependent variables
@@ -161,7 +161,7 @@ class DepData:
             # calculate value
             value = calculate_dependent_variable(dep_v, float_data_map)
             # replace value
-            in_file = t_op.replace_values(dep_v, value, in_file, dep_position[dep_v])
+            in_file = t_op.replace_values(dep_v, value, in_file)#, dep_position[dep_v])
         
         return in_file
 

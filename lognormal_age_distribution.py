@@ -27,8 +27,8 @@ def rate_to_prob(x, factor = 1):
     return prob
 #%% inputs
 size = 5000000
-normal_sd = 5.9
-normal_mean = 25
+normal_sd = 9.6
+normal_mean = 30
 log_mean, log_sd = normal_to_log(normal_mean, normal_sd)
 
 # simulate
@@ -50,9 +50,12 @@ prob = np.divide(counts, size)
 #prob = np.divide(counts, size)
 
 #
-if False:
+if True:
     x_d = np.array([16, 18, 25, 30, 40, 46, 51, 55])
-    y_d = np.array([1.4, 1.4, 1.4, 1.4, 1, 1, 1, 1])#np.array([2.45, 2.45, 2.45, 2.45, 1, 1, 1, 1]) #np.array([4.3, 4.3, 4.3, 4.3, 1, 1, 1, 1])
+    y_d = np.array([4.3, 4.3, 4.3, 4.3, 1, 1, 1, 1])
+    #np.array([2.45, 2.45, 2.45, 2.45, 0.5698, 0.5698, 0.5698, 0.5698]) 
+    #np.array([4.3, 4.3, 4.3, 4.3, 1, 1, 1, 1])
+    #np.array([1.4, 1.4, 1.4, 1.4, 0.3256, 0.3256, 0.3256, 0.3256])
     solution = sp.optimize.curve_fit(gauss, x_d, y_d, p0 = [1, normal_mean, normal_sd])
     opt_a, opt_b, opt_c = solution[0][0], solution[0][1], solution[0][2]
     y_hat = gauss(x_d, opt_a, opt_b, opt_c)

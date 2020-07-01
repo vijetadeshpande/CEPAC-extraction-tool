@@ -44,7 +44,7 @@ filepath = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/SA on control levers'
 in_file = link.import_all_cepac_in_files(filepath)
 
 # create folder for new in files
-filepath_new = os.path.join(filepath, 'SA on tx attributable factor') #'SA_percentage on '
+filepath_new = os.path.join(filepath, 'SA on testing rate') #'SA_percentage on '
 if not os.path.exists(filepath_new):
     os.makedirs(filepath_new)
     
@@ -252,6 +252,32 @@ def take_samples(lower, upper, mu, sigma, sample_n = 1000000):
     
     return samples
 
+
+def SA_testing_rate(values):
+    
+    replace_var = ['HIVtestBgAcceptRate']
+    replace_val = {}
+    for city in ['rio', 'salvador', 'manaus']:
+        for k in values:# this is  to vary % on ART
+            
+            # dict of values
+            replace_val['HIVtestBgAcceptRate'] = k
+            
+            # replace values in .in file
+            float_df = deepcopy(in_file[city])
+            
+            # replace the variables
+            for var in replace_var:
+                float_df = t_op.replace_values(var, replace_val[var], float_df)
+                
+            # save float_df
+            filename = os.path.join(filepath_new, city + '_testing_rate_' + str(k) + '.in')
+            link.write_cepac_in_file(filename, float_df)
+    
+    # parallelize files
+    c_op.parallelize_input(filepath_new)
+    
+    return
        
 # sample on treatment values
 #on_treat = take_samples(0.3, 0.9, 0.5, 0.2)
@@ -269,20 +295,21 @@ def take_samples(lower, upper, mu, sigma, sample_n = 1000000):
 #SA_acute(values)
 
 # SA on testing parameter
-#values = [0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.009, 0.01, 0.015]
+#values = [0.2, 0.3, 0.4, 0.5]#, 0.007, 0.009, 0.01, 0.015]
 #SA_testing(values)
 
 # SA on transmissions attributable to HRG
-values = [0.7, 0.8]
-SA_tx_att_hrg(values)
+#values = [0.7, 0.8]
+#SA_tx_att_hrg(values)
+
+# sa on background testing 
+#values = [0.2, 0.3, 0.4, 0.5]
+#SA_testing_rate(values)
+
 
 #
 #path = filepath_new
 #c_op.parallelize_input(path, 2)
 #c_op.collect_output(path)
-#link.export_output_to_excel(os.path.join(path, 'results'), os.path.join(path, 'results'))
+link.export_output_to_excel(os.path.join(path, 'results'), os.path.join(path, 'results'), mod = 'treatment')
 
-
-#
-#aaa = link.import_all_cepac_out_files(os.path.join(filepath_new + '_40 years', 'results'),
-#                                      module = 'treatment')

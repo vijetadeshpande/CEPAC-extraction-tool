@@ -24,6 +24,7 @@ from matplotlib.ticker import FuncFormatter
 
 #
 cohort_size = 10000000
+pop_factor = 41728 #{'r': 94104, 's': 41728, 'm': 45937}
 def save_scatter_plots(plot_df, save_path):
     xs = [12, 24, 36, 48, 60]
     def format_fn(tick_val, tick_pos):
@@ -56,13 +57,13 @@ def save_scatter_plots(plot_df, save_path):
                                           s = 300,
                                           legend = False)
     # Put the legend out of the figure
-    #lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    #ax.yaxis.set_major_locator(plt.MaxNLocator(4))
+    lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    ax.yaxis.set_major_locator(plt.MaxNLocator(4))
     ax.yaxis.set_major_formatter(FuncFormatter(format_fn))
     ax.yaxis.set_major_locator(plt.MaxNLocator(integer = True))
     plt.savefig(os.path.join(save_path, r'Target scatter plot'), 
-                #bbox_extra_artists=(lgd,), 
-                #bbox_inches='tight',
+                bbox_extra_artists=(lgd,), 
+                bbox_inches='tight',
                 dpi = 720)
     
     return 
@@ -95,7 +96,7 @@ def save_line_plots(plot_dict, save_path):
     
     # Transmissions
     df = plot_dict['tx and inf']
-    df = df.loc[df['PrEP uptake (%)'].isin([20, 30]), :]    
+    df = df.loc[df['PrEP uptake (%)'].isin([10, 60]), :]    
     plt.figure()
     g = sb.FacetGrid(df, col="PrEP uptake (%)", aspect = aspect_r)#, hue="Coverage time")#, col_wrap=3)
     g = (g.map(sb.lineplot, "t (simulation month)", "Number of transmissions", "Time to max. uptake (months)", alpha = line_alpha, palette = line_palette_r).add_legend())#, "WellID")
@@ -168,35 +169,35 @@ def save_line_plots(plot_dict, save_path):
     plt.savefig(os.path.join(save_path, r'Infections1'), dpi = 360)
     del g
 
-def extract_percentage_decline_value(df, cov, cov_t):
+def extract_percentage_decline_value(df, cov, cov_t, z_var):
     cov_idx = df.index[df.loc[:, 'PrEP uptake (%)'] == np.floor(cov)].values
     cov_t_idx = df.index[df.loc[:, 'Time to max. uptake (months)'] == np.floor(cov_t)].values
     idx = set(cov_idx).intersection(set(cov_t_idx)).pop()
 
-    return df.loc[idx, 'Percentage reduction in incidence rate']
+    return df.loc[idx, z_var]
 
-def save_heatmaps(plot_dict, save_path, label):
+def save_heatmaps(plot_dict, save_path, z_var):
     
     # heat plot for final runs
     df = plot_dict["percentage reduction"]
     # surface plot
-    percentage_decline = df['Percentage reduction in incidence rate']
+    df = df.loc[:, ['PrEP uptake (%)', 'Time to max. uptake (months)', z_var]]
     val = {'PrEPCoverage': np.sort(df['PrEP uptake (%)'].unique()), 'PrEPDuration': np.sort(df['Time to max. uptake (months)'].unique())}
     x_grid, y_grid = np.meshgrid(val['PrEPDuration'], val['PrEPCoverage'])
     x = np.ravel(x_grid)
     y = np.ravel(y_grid)
     z = []
     for i in range(len(x)):
-        z.append(extract_percentage_decline_value(plot_dict['percentage reduction'], y[i], x[i]))
+        z.append(extract_percentage_decline_value(plot_dict['percentage reduction'], y[i], x[i], z_var))
     sb_heatmap = pd.DataFrame()
     sb_heatmap['Time to max. uptake (months)'] = np.floor(x).astype(int)
     sb_heatmap['PrEP uptake (%)'] = np.floor(y).astype(int)
-    sb_heatmap['Percentage declination in incidence'] = z
+    sb_heatmap[z_var] = z
     sb_heatmap = sb_heatmap.sort_values(by = 'Time to max. uptake (months)')
     heatmap_df = pd.pivot(data = sb_heatmap,
                        index = 'Time to max. uptake (months)',
                        columns = 'PrEP uptake (%)',
-                       values = 'Percentage declination in incidence')
+                       values = z_var)
     
     # choose color theme
     #cmap = cm.get_cmap('RdYlGn')
@@ -207,12 +208,19 @@ def save_heatmaps(plot_dict, save_path, label):
     #my_col_map_r = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"] # high point is white
     #cmap = sb.color_palette(my_col_map_r)
     
+    #
     plt.figure(figsize=(10, 5))
     sb.set(font_scale=1.2)
-    heatmap_plot = sb.heatmap(heatmap_df, annot = True, fmt = '0.2f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': label})
+    if z_var in ['Percentage reduction in incidence rate', 'Infections averted (%)']:
+        fmt_z = '0.1f'
+    else:
+        fmt_z = 'd'
+    
+    #    
+    heatmap_plot = sb.heatmap(heatmap_df, annot = True, fmt = fmt_z, linewidths = 0.2, cmap = cmap, cbar_kws={'label': z_var})
     heatmap_plot.figure.axes[0].invert_yaxis()
     # if we need to rotate the axis ticks
-    heatmap_plot.figure.savefig(os.path.join(save_path, 'Percentage reduction in incidence.jpg'))
+    heatmap_plot.figure.savefig(os.path.join(save_path, z_var + '.jpg'))
     
 
 def calculate_inci_rate(df_dict):
@@ -228,12 +236,32 @@ def calculate_inci_rate(df_dict):
     return _inci_rate
 
 def calculate_percentage_reduction(df_sq, df_inv, t_sim):
-    return 100 * (df_sq.loc[t_sim-1] - df_inv.loc[t_sim-1])/(df_sq.loc[0])
+    
+    #
+    red_sq = (df_sq.loc[0] - df_sq.loc[t_sim-1])/(df_sq.loc[0])
+    red_inv = (df_inv.loc[0] - df_inv.loc[t_sim-1])/(df_inv.loc[0])
+    
+    #
+    red1 = 100 * (red_inv - red_sq)
+    
+    #
+    red = 100 * (df_sq.loc[t_sim - 1] - df_inv.loc[t_sim-1])/(df_sq.loc[0])
+    
+    return red
 
-def create_plot_df(cepac_out): 
+def calculate_infections_averted(df_sq, df_inv, t_sim):
+    
+    inf_sq = df_sq.iloc[0:t_sim].sum()
+    inf_inv = df_inv.iloc[0:t_sim].sum()
+    
+    inf_averted = inf_sq - inf_inv
+    
+    return inf_averted
+
+def create_plot_df(cepac_out, HORIZON = 60): 
     
     # what is simulation horizon
-    t_sim = 60
+    t_sim = HORIZON
     
     # calculate incidence rate
     for file in cepac_out:
@@ -253,7 +281,7 @@ def create_plot_df(cepac_out):
                                  'Cumulative number of infections', 'Cumulative number of transmissions'])
     df_per_red = pd.DataFrame(0, index = np.arange(0, len(cepac_out)-1), 
                               columns = ['PrEP uptake (%)', 'Time to max. uptake (months)',
-                                         'Percentage reduction in incidence rate']) 
+                                         'Percentage reduction in incidence rate', 'Transmissions averted', 'Infections averted']) 
     # iterate over files
     row_idx = 0
     for file in cepac_out:
@@ -271,6 +299,10 @@ def create_plot_df(cepac_out):
         df_per_red.loc[row_idx/t_sim, 'PrEP uptake (%)'] = aux.get_coverage_level_from_file_name(file)
         df_per_red.loc[row_idx/t_sim, 'Time to max. uptake (months)'] = aux.get_coverage_time_from_file_name(file)
         df_per_red.loc[row_idx/t_sim, 'Percentage reduction in incidence rate'] = calculate_percentage_reduction(cepac_out['SQ']['incidence rate'], cepac_out[file]['incidence rate'], t_sim)
+        df_per_red.loc[row_idx/t_sim, 'Transmissions averted'] = int(pop_factor * (calculate_infections_averted(cepac_out['SQ']['transmissions'], cepac_out[file]['transmissions'], t_sim)/cohort_size))
+        averted_inf = calculate_infections_averted(cepac_out['SQ']['infections'], cepac_out[file]['infections'], t_sim)
+        df_per_red.loc[row_idx/t_sim, 'Infections averted'] = int(pop_factor * averted_inf/cohort_size)
+        df_per_red.loc[row_idx/t_sim, 'Infections averted (%)'] = 100 * (averted_inf/cepac_out['SQ']['infections'][0:t_sim].sum())
         #df.loc[row_idx: row_idx + t_sim-1, 'Coverage level (%)'] = 0
         #df.loc[row_idx: row_idx + t_sim-1, 'Coverage time (months)'] = 0
     
@@ -293,16 +325,20 @@ def create_plot_df(cepac_out):
         
         # increase row idx
         row_idx += t_sim
+        
+    # adjustment
+    df_per_red.loc[:, ['Transmissions averted', 'Infections averted']] = df_per_red.loc[:, ['Transmissions averted', 'Infections averted']].astype('int')
             
     # save df in dict
     df['Time to max. uptake (months)'] = df['Time to max. uptake (months)'].astype('int64')
     final_out['tx and inf'] = df
     final_out['percentage reduction'] = df_per_red
     
+    
     return final_out
     
 
-def analyze_final_output(path_inv, path_sq):
+def analyze_final_output(path_inv, path_sq, HORIZON = 60):
     
     # extract cepac out
     cepac_out = link.import_all_cepac_out_files(path_inv, module = 'regression')
@@ -311,26 +347,29 @@ def analyze_final_output(path_inv, path_sq):
     cepac_out['SQ'] = (link.import_all_cepac_out_files(path_sq, module = 'regression'))['SQ']
 
     # create a plotting friendly df
-    plot_dict = create_plot_df(cepac_out)
+    plot_dict = create_plot_df(cepac_out, HORIZON)
     
     # plot results and save images
     # lineplot
-    folder_name = 'Line plots for CEPAC output'
+    folder_name = 'Line plots for CEPAC output_' + str(HORIZON)
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    save_line_plots(plot_dict, save_path)
+    #save_line_plots(plot_dict, save_path)
     # heatmap
-    folder_name = 'Heatmaps for CEPAC output'
+    folder_name = 'Heatmaps for CEPAC output_' + str(HORIZON)
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    save_heatmaps(plot_dict, save_path, 'Percentage reduction in incidence')
+    save_heatmaps(plot_dict, save_path, 'Percentage reduction in incidence rate')
+    save_heatmaps(plot_dict, save_path, 'Infections averted')
+    save_heatmaps(plot_dict, save_path, 'Infections averted (%)')
+    save_heatmaps(plot_dict, save_path, 'Transmissions averted')
     # scatter
-    folder_name = 'Scatter plots for CEPAC output'
+    folder_name = 'Scatter plots for CEPAC output_' + str(HORIZON)
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    save_scatter_plots(plot_dict['percentage reduction'], save_path)
+    #save_scatter_plots(plot_dict['percentage reduction'], save_path)
     
     return

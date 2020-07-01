@@ -31,11 +31,16 @@ import link_to_cepac_in_and_out_files as link
 
 if True:
     # path to import in files
+    HORIZON = int(60)
+    CITY = "salvador"
+    CITY_CODE = CITY[0] + str(10)#str(int(HORIZON/12))
     path_dict = {}
-    path_dict['input'] = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Manaus/2-way SA' #r"/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA"
+    base = r'/Users/vijetadeshpande/Documents/GitHub/meta-environment/Data and results/Community benefit CEPAC runs'
+    path_dict['input'] = os.path.join(base, 'Basefiles')
     path_dict['output'] = {}
-    path_dict['output']['intervention'] = os.path.join(path_dict["input"], "Positive coverage runs")
-    path_dict['output']['status quo'] = os.path.join(path_dict["input"], "Status quo")
+    path_dict['output']['intervention'] = os.path.join(base, 'Measurement of community benefit_' + CITY_CODE, "Positive coverage runs_" + CITY_CODE)
+    path_dict['output']['status quo'] = os.path.join(base, 'Measurement of community benefit_' + CITY_CODE, "Status quo_" + CITY_CODE)
+    path_dict['output']['final runs'] = os.path.join(base, "Final runs_" + CITY_CODE)
     
     # find and replace following variable
     var_to_replace = {'PrEPCoverage': np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6]), 'PrEPDuration': np.array([24, 36, 48, 60])}
@@ -44,27 +49,33 @@ if True:
     #{'PrEPCoverage': np.array([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6]), 'PrEPDuration': np.array([24, 36, 48, 60])} # 
     
     # check which path exists
-    if os.path.exists(os.path.join(path_dict['input'], 'Final runs')):
+    if os.path.exists(path_dict['output']['final runs']):
         # collect parallelized output
-        c_op.collect_output(os.path.join(path_dict['input'], 'Final runs'))
+        try:
+            c_op.collect_output(path_dict['output']['final runs'])
+        except:
+            pass
         
         # calculate percentage reduction in incidence rate and plot all the results
-        final_path = os.path.join(path_dict['input'], 'Final runs', 'results')
+        final_path = os.path.join(path_dict['output']['final runs'], 'results')
         sq_path = os.path.join(path_dict['output']['status quo'], 'results')
-        abc_final.analyze_final_output(final_path, sq_path)
+        abc_final.analyze_final_output(final_path, sq_path, HORIZON)
         
         # write excel file for the CEPAC output
         link.export_output_to_excel(final_path, final_path)
     
     elif os.path.exists(path_dict['output']['intervention']):
         # collect parallelized output
-        #c_op.collect_output(os.path.join(path_dict['output']['intervention']))
+        try: 
+            c_op.collect_output(os.path.join(path_dict['output']['intervention']))
+        except:
+            pass
         
         # write all final run files
-        abc_output.write_final_runs(var_to_replace, path_dict)
+        abc_output.write_final_runs(var_to_replace, path_dict, HORIZON)
         
         # paralellize
-        c_op.parallelize_input(os.path.join(path_dict['input'], 'Final runs'))
+        c_op.parallelize_input(path_dict['output']['final runs'])
     else:
         # write all abc run files
         abc_input.write_abc(var_to_replace, path_dict)

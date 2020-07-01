@@ -28,6 +28,8 @@ import seaborn as sb
 from copy import deepcopy
 import math
 import abc_auxilliaries as aux
+import TextFileOperations as t_op
+
 
 def plot_heatmap(val_to_replace, percentage_decline, path_dict):
     
@@ -38,13 +40,13 @@ def plot_heatmap(val_to_replace, percentage_decline, path_dict):
     y = np.ravel(y_grid)
     z = np.array(percentage_decline)
     sb_heatmap = pd.DataFrame()
-    sb_heatmap['PrEP coverage time (months)'] = np.floor(x)
-    sb_heatmap['PrEP coverage (%)'] = np.floor(y * 100)
+    sb_heatmap['Time to max. uptake (months)'] = np.floor(x).astype(int)
+    sb_heatmap['PrEP uptake (%)'] = np.floor(y * 100).astype(int)
     sb_heatmap['Percentage declination in incidence'] = z
-    sb_heatmap = sb_heatmap.sort_values(by = 'PrEP coverage time (months)')
+    sb_heatmap = sb_heatmap.sort_values(by = 'Time to max. uptake (months)')
     plot_df = pd.pivot(data = sb_heatmap,
-                       index = 'PrEP coverage time (months)',
-                       columns = 'PrEP coverage (%)',
+                       index = 'Time to max. uptake (months)',
+                       columns = 'PrEP uptake (%)',
                        values = 'Percentage declination in incidence')
     
     
@@ -58,7 +60,7 @@ def plot_heatmap(val_to_replace, percentage_decline, path_dict):
     
     plt.figure(figsize=(10, 5))
     sb.set(font_scale=1.2)
-    heatmap_plot = sb.heatmap(plot_df, annot = True, fmt = '0.2f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': 'Percentage reduction in incidence\n due to only community benefit'})
+    heatmap_plot = sb.heatmap(plot_df, annot = True, fmt = '0.1f', linewidths = 0.2, cmap = cmap, cbar_kws={'label': 'Percentage reduction in incidence\n due to only community benefit'})
     heatmap_plot.figure.axes[0].invert_yaxis()
     # if we need to rotate the axis ticks
     if False:
@@ -93,7 +95,7 @@ def export_abc_out_to_excel(cepac_out, structured_out, val_to_replace, path_dict
     writer.save()
 
 
-def write_final_runs(value_grid, path_dict):
+def write_final_runs(value_grid, path_dict, STOP_TIME = 60):
     
     # aux function for creating final run files
     def get_reduction_coeff(percentage_red, stop_time):
@@ -121,6 +123,11 @@ def write_final_runs(value_grid, path_dict):
     cepac_out = {}
     for k in path_dict['output']:
         cepac_out[k] = link.import_all_cepac_out_files(os.path.join(path_dict['output'][k], r'results'), module = "regression")
+    
+    # set stop time and PrEP duration
+    #SQ_DF = link.import_all_cepac_in_files(path_dict['output']['status quo'])['SQ']
+    #STOP_TIME = int(t_op.read_values('HIVIncidReductionStopTime', SQ_DF))
+    #del SQ_DF
     
     # create sets of runs ABC
     out = {}
@@ -158,7 +165,7 @@ def write_final_runs(value_grid, path_dict):
                 out[j_idx]["C"] = cepac_out["status quo"]["SQ"]
                 inp[j_idx] = inp[5]
             inp[row_idx]['PrEPCoverage'] = i
-            inp[row_idx]['PrEPDuration'] = 120 #60 #600
+            inp[row_idx]['PrEPDuration'] = STOP_TIME #60 #600
             percentage_decline.append(tx_algo.get_percentage_decline(out[row_idx], inp[row_idx]))
             row_idx += 1
     
@@ -169,9 +176,9 @@ def write_final_runs(value_grid, path_dict):
     export_abc_out_to_excel(cepac_out, out, val_to_replace, path_dict)
         
     # create directory to write the final run files
-    if not os.path.exists(os.path.join(path_dict['input'], 'Final runs')):
-        os.makedirs(os.path.join(path_dict['input'], 'Final runs'))
-    final_path = os.path.join(path_dict['input'], 'Final runs')
+    if not os.path.exists(path_dict['output']['final runs']):
+        os.makedirs(path_dict['output']['final runs'])
+    final_path = path_dict['output']['final runs']
     
     # read one .in file (B, as that is intervention file) and alter following values
     # 1. reduction coefficient
@@ -194,7 +201,7 @@ def write_final_runs(value_grid, path_dict):
         float_int = deepcopy(base_int)
         
         # following value of stop time might not be correct
-        float_int.loc[idx["HIVIncidReductionStopTime"], 1] = 120 #480#120
+        float_int.loc[idx["HIVIncidReductionStopTime"], 1] = STOP_TIME #480#120
         coeff = get_reduction_coeff(percentage_decline[run], float_int.loc[idx["HIVIncidReductionStopTime"], 1].values[0])
         if coeff <= 0:
             # disable incidence reduction 

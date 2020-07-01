@@ -99,7 +99,7 @@ def import_all_cepac_in_files(path, extensions = [r'*.in']):
     return data
 
 # TODO: changing (removing backslash) extension for it work on Mac
-def import_all_cepac_out_files(path, module = '', sensitivity_module = False, transmission_module = False, extensions = [r'*.out']):
+def import_all_cepac_out_files(path, module = 'raw', sensitivity_module = False, transmission_module = False, extensions = [r'*.out']):
     # define dictionary for saving the output to return
     data = {}
     
@@ -109,7 +109,7 @@ def import_all_cepac_out_files(path, module = '', sensitivity_module = False, tr
         # read all the files in the folder of the current extension
         for filename in glob.glob(os.path.join(path, ex)):
             if ex == r'*.out':
-                float_name = re.sub('.out', "", os.path.basename(os.path.normpath(filename)))
+                float_name = re.sub('\.out', "", os.path.basename(os.path.normpath(filename)))
                 float_name = re.sub('cepac_run', "", float_name)
                 float_name = re.sub('cepac_run,', "", float_name)
                 with open(filename, 'r') as f2:
@@ -212,8 +212,9 @@ def import_all_cepac_out_files(path, module = '', sensitivity_module = False, tr
                     del f_dict
                     
                     
+                elif module == 'raw':
                     # if no module name is mentioned, raw data will be the output
-                    #data[float_name] = float_df
+                    data[float_name] = float_df.str.split(expand = True)
 
                 
             elif ex == r'\*.txt':
@@ -281,7 +282,10 @@ def import_all_cepac_out_files(path, module = '', sensitivity_module = False, tr
     if 'out' in ex:
         if 'popstats' in data.keys():
             if not len(data['popstats']) == 0:
-                data['popstats'] = adjust.do_adjustments_on_popstats({'popstats': data['popstats']})['popstats']
+                try:
+                    data['popstats'] = adjust.do_adjustments_on_popstats({'popstats': data['popstats']})['popstats']
+                except:
+                    data['popstats'] = {}
     else:            
         data = adjust.do_adjustments_on_long_data(data)
         
@@ -505,10 +509,10 @@ def extract_input_for_tx_rate_multiplier(path):
     
     return input_par
 
-def export_output_to_excel(ext_out_path, save_path):
+def export_output_to_excel(ext_out_path, save_path, mod = 'regression'):
     
     # read all out files in extract out path
-    cepac_out = import_all_cepac_out_files(ext_out_path, module = 'regression')
+    cepac_out = import_all_cepac_out_files(ext_out_path, module = mod)
     
     # change structure of the dictionary
     out_dict = {}

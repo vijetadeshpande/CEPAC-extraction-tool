@@ -77,7 +77,8 @@ class OneWaySA:
         self.base_in_file = link.read_cepac_in_file(file_path)
         
         ## fill in missing data required for calculation of dependent variable
-        dep_data_map = DepD().fill_blank_data(value_map, self.base_in_file)
+        self.dep_data_object = DepD()
+        dep_data_map = self.dep_data_object.fill_blank_data(value_map, self.base_in_file)
         
         # set attributes
         self.var_list = [i for i in value_map.keys()]
@@ -106,23 +107,28 @@ class OneWaySA:
         for var in var_list:
             for val in val_map[var]:
                 # this val can either be a float or array
-                if not (isinstance(val, float) or isinstance(val, int) or isinstance(val, np.array)):
-                    raise TypeError('The value of variable for OWSA must be np.array/float/int')
-                    return
+                #if not (isinstance(val, (float, int))):
+                #    raise TypeError('The value of variable for OWSA must be np.array/float/int')
+                #    return
                 
                 # replace variable value
-                in_file = t_op.replace_values(var, val, in_file, position = self.var_pos[var])
+                valtype = int if var in ['HIVtestFreqInterval'] else float
+                in_file = t_op.replace_values(var, val, in_file, position = self.var_pos[var], valtype = valtype)
                 
                 # TODO: search dependencies of current variable and change those values
-                in_file = self.dep_data_object.replace_dep_value(var, val, self.dep_data_map, in_file, self.var_pos[var])
+                in_file = self.dep_data_object.replace_dep_value(var, val, self.dep_data_map, in_file)#, self.var_pos[var])
                 
                 # save file
                 x = ('%s=%.4f.in')%(var, val)
                 file_name = os.path.join(self.save_path, x)
                 link.write_cepac_in_file(file_name, in_file)
+                
+        return
+    
+    def parallelize(self, parallel = 1):
             
-            # parallelize the files
-            c_op.parallelize_input(self.save_path, parallel)
+        # parallelize the files
+        c_op.parallelize_input(self.save_path, parallel)
         
         return
 
@@ -143,8 +149,8 @@ class TwoWaySA:
         self.base_in_file = link.read_cepac_in_file(file_path)
         
         # fill in missing data required for calculation of dependent variable
-        dep_data_object = DepD()
-        dep_data_map = dep_data_object.fill_blank_data(value_map, self.base_in_file)
+        self.dep_data_object = DepD()
+        dep_data_map = self.dep_data_object.fill_blank_data(value_map, self.base_in_file)
         
         # list of var in analysis
         self.var_list = [i for i in value_map.keys()]
@@ -153,7 +159,7 @@ class TwoWaySA:
         dep_var_list = []
         for var in self.var_list:
             try: 
-                dv_list = dep_data_object.get_list_of_dep_variables(var)
+                dv_list = self.dep_data_object.get_list_of_dep_variables(var)
             except KeyError:
                 continue
             for dv in dv_list:
@@ -165,7 +171,6 @@ class TwoWaySA:
         self.val_list = [value_map[i] for i in self.var_list]
         self.val_map = value_map
         self.dep_data_map = dep_data_map
-        self.dep_data_object = dep_data_object
         self.save_path = os.path.join(save_path, ('TWSA_var1=%s_var2=%s')%(self.var_list[0], self.var_list[1]))
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)

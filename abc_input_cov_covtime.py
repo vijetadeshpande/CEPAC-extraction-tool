@@ -70,11 +70,11 @@ def write_abc(value_map, path_dict):
                 float_c.loc[idx[var], 1:2] = val_to_replace[var][(row, col)]
             
             # make new dir
-            if not os.path.exists(os.path.join(path_dict['input'], 'Positive coverage runs')):
-                os.makedirs(os.path.join(path_dict['input'], 'Positive coverage runs'))
+            if not os.path.exists(path_dict['output']['intervention']):
+                os.makedirs(path_dict['output']['intervention'])
             
             # name the input file
-            path = os.path.join(path_dict['input'], 'Positive coverage runs')
+            path = path_dict['output']['intervention']
             # B
             name = "RunB_Coverage=%d, Duration=%d"%(100 * val_to_replace["PrEPCoverage"][(row, col)], val_to_replace["PrEPDuration"][(row, col)]) + r".in"
             float_path = os.path.join(path, name)
@@ -85,10 +85,10 @@ def write_abc(value_map, path_dict):
             link.write_cepac_in_file(float_path, float_c)
     
     # create a folder for status quo
-    if not os.path.exists(os.path.join(path_dict['input'], 'Status quo')):
-        os.makedirs(os.path.join(path_dict['input'], 'Status quo'))
+    if not os.path.exists(path_dict['output']['status quo']):
+        os.makedirs(path_dict['output']['status quo'])
     
     # write a status quo .in file in the stsus quo folder
-    link.write_cepac_in_file(os.path.join(os.path.join(path_dict['input'], 'Status quo'), 'SQ.in'), cepac_in['SQ'])
+    link.write_cepac_in_file(os.path.join(path_dict['output']['status quo'], 'SQ.in'), cepac_in['SQ'])
 
     return

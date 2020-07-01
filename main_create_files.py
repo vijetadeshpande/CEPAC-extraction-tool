@@ -8,25 +8,53 @@ Created on Thu Mar 26 10:53:21 2020
 
 import AnalysisTasks as AT
 import DependentVarList as DepList
+import os
+import numpy as np
 
-base_in_file_path = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/TEST CODE/Rio.in'
-save_path = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/TEST CODE/'
+#
+def monthly_prob(prob_y):
+    rate_y = -1 * np.log(1 - prob_y)
+    rate_m = rate_y/12
+    prob_m = 1 - np.exp(-1 * rate_m)
+    
+    return prob_m
 
-# value map
-val_map = {'PrEPEfficacy': [0, 0.1, 0.2, 0.3, 0.4], 'PrEPDuration': [12, 24, 36, 48, 60]}
 
-# check if the variables selected need data not present in .in file
-# e.g. If we want to change efficacy, 
-#       1. Efficacy var is not present in .in file
-#       2. PrEPIncid named variable in CEPAC sheet changes if we change efficacy
-#       3. There, we want to change PrEPIncid, which needs valu of efficacy. But, efficacy is not present in .in file
-#       4. take such data from user
+#
+city, horizon = 'Manaus', int(120)
+CITY_CODE = city[0] + str(int(horizon/12))
+strategies = ['30 in 36 months']#['30 in 36 months', '30 in 48 months', '40 in 36 months', '40 in 48 months']
+base = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA_surf' #r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/1-way SA/'
+val_map_twsa = {'PrEPAdherence': [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.80, 0.86], 'PrEPDroputPostThreshold': [0, 0.05, 0.1, 0.15, 0.20, 0.25]}
 
-if False:
+for strategy in strategies:
+    #
+    basepath = os.path.join(base, strategy, 'Basefiles')
+    filepath = os.path.join(basepath, 'B.in')
+    savepath = os.path.join(basepath, '..', 'Measurement of community benefit')#, 'Adherence_' + city + str(horizon))
+    if not os.path.exists(savepath): os.makedirs(savepath)
+    
+    # value map
+    val_maps = [{'PrEPAdherence': np.array([0.5, 0.6, 0.7, 0.8, 0.86])}, 
+                 {'HIVtestFreqInterval': np.array([6, 3, 1]).astype(int)},
+                 {'PrEPDroputPostThreshold': monthly_prob(np.array([0, 0.10, 0.20, 0.25]))}]
+    
+    #if False:
     # test OWSA
-    Rio_OWSA = AT.OneWaySA(base_in_file_path, save_path, val_map)
-    Rio_OWSA.create_in_files(parallel = 2)
-
-# test two-way SA
-Rio_TWSA = AT.TwoWaySA(base_in_file_path, save_path, val_map)
-Rio_TWSA.create_in_files(parallel = 5)
+    #for val_map in val_maps:
+        
+        #if 'HIVtestFreqInterval' in val_map.keys():
+            #
+        #Rio_OWSA = AT.OneWaySA(filepath, savepath, val_map)
+        #Rio_OWSA.create_in_files()
+        # parallel files for running it faster on cluster
+        #Rio_OWSA.parallelize(parallel = 1)
+    
+        # are there any other variables to replace?
+        #replace_map = {}
+        #Rio_OWSA.replace_val(replace_map)
+    
+    # test two-way SA
+    #val_maps.pop('HIVtestFreqInterval')
+    Rio_TWSA = AT.TwoWaySA(filepath, savepath, val_map_twsa)
+    Rio_TWSA.create_in_files(parallel = 1)
