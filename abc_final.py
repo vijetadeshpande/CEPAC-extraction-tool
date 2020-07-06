@@ -24,7 +24,7 @@ from matplotlib.ticker import FuncFormatter
 
 #
 cohort_size = 10000000
-pop_factor = 41728 #{'r': 94104, 's': 41728, 'm': 45937}
+pop_factor = 45937 #{'r': 94104, 's': 41728, 'm': 45937}
 def save_scatter_plots(plot_df, save_path):
     xs = [12, 24, 36, 48, 60]
     def format_fn(tick_val, tick_pos):
@@ -350,21 +350,24 @@ def analyze_final_output(path_inv, path_sq, HORIZON = 60):
     plot_dict = create_plot_df(cepac_out, HORIZON)
     
     # plot results and save images
+    
     # lineplot
     folder_name = 'Line plots for CEPAC output_' + str(HORIZON)
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     #save_line_plots(plot_dict, save_path)
+    
     # heatmap
     folder_name = 'Heatmaps for CEPAC output_' + str(HORIZON)
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    save_heatmaps(plot_dict, save_path, 'Percentage reduction in incidence rate')
-    save_heatmaps(plot_dict, save_path, 'Infections averted')
-    save_heatmaps(plot_dict, save_path, 'Infections averted (%)')
-    save_heatmaps(plot_dict, save_path, 'Transmissions averted')
+    #save_heatmaps(plot_dict, save_path, 'Percentage reduction in incidence rate')
+    #save_heatmaps(plot_dict, save_path, 'Infections averted')
+    #save_heatmaps(plot_dict, save_path, 'Infections averted (%)')
+    #save_heatmaps(plot_dict, save_path, 'Transmissions averted')
+    
     # scatter
     folder_name = 'Scatter plots for CEPAC output_' + str(HORIZON)
     save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
@@ -372,4 +375,11 @@ def analyze_final_output(path_inv, path_sq, HORIZON = 60):
         os.makedirs(save_path)
     #save_scatter_plots(plot_dict['percentage reduction'], save_path)
     
+    # save results
+    folder_name = 'Excel files for results_' + str(HORIZON)
+    save_path = os.path.join(os.path.join(path_inv, '..', '..'), folder_name)
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    plot_dict['percentage reduction'].to_csv(os.path.join(save_path, 'outcomes.csv'))
+        
     return

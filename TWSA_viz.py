@@ -79,8 +79,8 @@ for strategy in strategies:
         averted_tx = SUS_SIZE * (averted_tx/COHORT)
         
         #
-        plot_df.loc[idx, 'PrEP adherence (%)'] = float(file.split('=')[1][0:6])
-        plot_df.loc[idx, 'PrEP dropout (%)'] = float(file.split('=')[2][0:6])
+        plot_df.loc[idx, 'PrEP adherence (%)'] = int(100 * float(file.split('=')[1][0:6]))
+        plot_df.loc[idx, 'PrEP dropout (%)'] = int(100 * float(file.split('=')[2][0:6]))
         plot_df.loc[idx, 'Averted infections'] = averted_inf
         
 
@@ -88,22 +88,30 @@ for strategy in strategies:
 plot_df = plot_df.sort_values(by = ['PrEP adherence (%)', 'PrEP dropout (%)'])    
     
 # Make the plot
-fig = plt.figure(figsize = (12, 9), dpi = 120)
+fig = plt.figure(figsize = (14, 10.5), dpi = 120)
 ax = fig.gca(projection='3d')
  
 # to Add a color bar which maps values to colors.
 surf=ax.plot_trisurf(plot_df['PrEP dropout (%)'],
                      plot_df['PrEP adherence (%)'],  
                      plot_df['Averted infections'], 
-                     cmap='PuBu_r', 
+                     cmap='RdYlGn', 
                      linewidth=0.1,
                      edgecolor = 'black')
 fig.colorbar(surf, shrink=0.7, aspect=5)
-ax.view_init(30, 30)
+ax.view_init(30, 60)
+ax.set_xlabel('PrEP dropout (%)', fontsize = 'xx-large', labelpad = 20)
+ax.set_ylabel('PrEP adherence (%)', fontsize = 'xx-large', labelpad = 20)
+ax.set_zlabel('Averted infections', fontsize = 'xx-large', labelpad = 20)
+plt.rcParams['xtick.labelsize'] = 15
+plt.rcParams['ytick.labelsize'] = 15
+plt.rcParams['xtick.major.pad']='0'
+plt.rcParams['ytick.major.pad']='0'
+#plt.rcParams['ztick.labelsize'] = 20
 plt.savefig(os.path.join(writebase, 'Adherence-Dropout surface plot.png'))
 plt.show()
 
-#
+"""
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 
@@ -126,4 +134,7 @@ ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
 fig.colorbar(surf, shrink=0.5, aspect=5)
 
 plt.show()
+
+"""
+
         

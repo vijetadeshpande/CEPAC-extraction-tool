@@ -32,10 +32,10 @@ import link_to_cepac_in_and_out_files as link
 if True:
     # path to import in files
     HORIZON = int(60)
-    CITY = "salvador"
+    CITY = "Manaus"
     CITY_CODE = CITY[0] + str(10)#str(int(HORIZON/12))
     path_dict = {}
-    base = r'/Users/vijetadeshpande/Documents/GitHub/meta-environment/Data and results/Community benefit CEPAC runs'
+    base = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Manaus/2-way SA_10 year'
     path_dict['input'] = os.path.join(base, 'Basefiles')
     path_dict['output'] = {}
     path_dict['output']['intervention'] = os.path.join(base, 'Measurement of community benefit_' + CITY_CODE, "Positive coverage runs_" + CITY_CODE)
