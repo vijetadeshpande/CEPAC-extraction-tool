@@ -180,7 +180,7 @@ def import_all_cepac_out_files(path, module = 'raw', sensitivity_module = False,
                     
                     # define variables to extract
                     #var = [r'HIV+undetected', r'HIV+unlinked(detected not in care', r'HIV+in_care', r'HIV+LTFU', r'HIV+RTC']
-                    var = [r'#_Alive:', r'#_Deaths:', r'Total_HIV+']
+                    var = [r'#_Alive:', r'#_Deaths:', r'Total_HIV+', r'Suppressed_']
                     data[float_name] = {}
                     
                     # where to find
@@ -200,7 +200,7 @@ def import_all_cepac_out_files(path, module = 'raw', sensitivity_module = False,
                     #             "HIV+in_care"                      : "HIV positive in care",
                     #             "HIV+LTFU"                         : "HIV positive LTFU",
                     #             "HIV+RTC"                          : "HIV positive RTC"}
-                    name_dict = {'#_Alive:': 'Alive', '#_Deaths:': 'Deaths', 'Total_HIV+': 'Total HIV+'}
+                    name_dict = {'#_Alive:': 'Alive', '#_Deaths:': 'Deaths', 'Total_HIV+': 'Total HIV+', 'Suppressed_': 'Suppressed'}
                     
                     
                     # TODO: in following loop for replacing the dictionary keys, loop goes over keys twice,
@@ -354,7 +354,13 @@ def get_subset_of_out_file(df, var_name = [], overall = False, monthly = False):
         if not var_name == []:
             out_dict = {}
             for var in var_name:
+                
+                # find row of the variable
                 idx = df.loc[df.iloc[:,0] == var].index.values
+                if idx.size == 0:
+                    idx = df.loc[df.iloc[:,9] == var].index.values
+                    
+                # column of the specific value we want
                 if var == r'Primary_Transmissions_by_True_HVL_':
                     col_n = 8
                 elif var in [r'Self_Transmission_Rate_Multiplier', r'Total_HIV+']:

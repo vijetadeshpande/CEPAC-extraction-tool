@@ -24,14 +24,14 @@ import TextFileOperations as t_op
 HORIZON = 120
 strategies = ['30 in 36 months']#['30 in 36 months', '30 in 48 months', '40 in 36 months', '40 in 48 months']
 var_list = ['PrEPAdherence', 'PrEPDroputPostThreshold']
-base = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/2-way SA_surf'
+base = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Manaus/2-way SA_surf'
 
 #%%
 
 def community_benefit(run_A, run_B, HORIZON = 120):
     
     # few fixed parameters
-    COHORT_SIZE = 10000000
+    COHORT_SIZE = 20000000
     
     # Utils
     def calculate_average_prob(total_inf):
@@ -85,7 +85,7 @@ for strategy in strategies:
     basepath = os.path.join(base, strategy)
     readbase = os.path.join(basepath, 'Measurement of community benefit')
     writebase = os.path.join(basepath, 'Final runs')
-    sqpath = os.path.join(base, 'Common runs')
+    sqpath = os.path.join(base, 'Common runs', 'SQ')
     #readpaths = {}
     #finalpaths = {}
 

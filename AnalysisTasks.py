@@ -119,7 +119,10 @@ class OneWaySA:
                 in_file = self.dep_data_object.replace_dep_value(var, val, self.dep_data_map, in_file)#, self.var_pos[var])
                 
                 # save file
-                x = ('%s=%.4f.in')%(var, val)
+                try:
+                    x = ('%s=%.4f.in')%(var, val)
+                except:
+                    x = ('%s=%.4f.in')%(var, val[0])
                 file_name = os.path.join(self.save_path, x)
                 link.write_cepac_in_file(file_name, in_file)
                 

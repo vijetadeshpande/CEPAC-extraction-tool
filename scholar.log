@@ -1,0 +1,5 @@
+INFO:scholarly:Getting https://scholar.google.com/citations?hl=en&view_op=search_authors&mauthors=label:reinforcement%20learning
+INFO:scholarly:Session proxy config is {}
+INFO:scholarly:Found 0 authors
+INFO:scholarly:No more author pages
+INFO:numexpr.utils:NumExpr defaulting to 4 threads.

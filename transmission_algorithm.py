@@ -80,7 +80,7 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
     prep_efficacy = inputs_req_from_user['prep_efficacy'] 
     n_hiv_uninfected = inputs_req_from_user['CohortSize']
     prep_duration = inputs_req_from_user['PrEPDuration']
-    p_sq_start = inputs_req_from_user['HIVmthIncidMale']
+    #p_sq_start = inputs_req_from_user['HIVmthIncidMale']
     
     # 
     if prep_uptake == 0.6 or prep_uptake == 60:
@@ -114,28 +114,29 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
             sus['RunC'][1:] -= output_dict[run]['infections'].loc[0:prep_duration-2].cumsum()
             inf_prob['RunC'] = (output_dict[run]['infections'].loc[0:prep_duration-1])/sus['RunC']
     
-    # now we have all the inputs required for calculation of percentage decline
-    # in incidence due to community benefit
-    if inputs_req_from_user['prep_usage_at_initialization'] in set(['y', 'Y', 'yes', 'Yes', 'YES']):
-        p_int_start = ((1 - prep_uptake) * p_sq_start) + (prep_uptake * (1 - (1 - p_sq_start)**(1 - prep_efficacy)))
-        i_sq_cumulative_agg = (1 - (1 - p_sq_start)**(prep_duration)) * n_hiv_uninfected
-    elif inputs_req_from_user['prep_usage_at_initialization'] in set(['n', 'N', 'no', 'No', 'NO']):
-        p_int_start = p_sq_start
-        i_sq_cumulative_agg = inf['RunA']
-    
     # Utils
     def calculate_average_prob(total_inf):
         p = total_inf/n_hiv_uninfected
         p_avg = 1 - np.power((1 - p), (1/prep_duration))
         
         return p_avg
+
+    
+    """
+    # now we have all the inputs required for calculation of percentage decline
+    # in incidence due to community benefit
+    if inputs_req_from_user['prep_usage_at_initialization'] in set(['y', 'Y', 'yes', 'Yes', 'YES']):
+        p_int_start = inf_prob['RunB'].iloc[0]#((1 - prep_uptake) * p_sq_start) + (prep_uptake * (1 - (1 - p_sq_start)**(1 - prep_efficacy)))
+        i_sq_cumulative_agg = (1 - (1 - p_sq_start)**(prep_duration)) * n_hiv_uninfected
+    elif inputs_req_from_user['prep_usage_at_initialization'] in set(['n', 'N', 'no', 'No', 'NO']):
+        p_int_start = p_sq_start
+        i_sq_cumulative_agg = inf['RunA']
     
     def calculate_end_p_new(p_avg_sq, p_avg_int):
         p_end = prob_ratio_at_zero * prob_sq_t + (2 * (p_avg_int - (prob_ratio_at_zero * p_avg_sq)))
         
         return p_end
     
-    """
     # function to calculate end month probability
     def calculate_end_p(val, denominator = False):
         p = val/n_hiv_uninfected
@@ -193,7 +194,7 @@ def get_percentage_decline(output_dict, inputs_req_from_user):
     step_6 = (inf_prob['RunB'][prep_duration-1] - step_5)/inf_prob['RunB'][prep_duration-1]
     
     # incidence red
-    percentage_decline = 100 * step_6
+    percentage_decline = min(99.99, 100 * step_6)
     # coefficient
     coeff = -1*prep_duration/(np.log(1 - step_6))
     

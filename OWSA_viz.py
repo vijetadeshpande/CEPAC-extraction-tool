@@ -30,14 +30,20 @@ def yearly_prob(prob_m):
 
 # user input
 HORIZON = 60
-COHORT = 10000000
-SUS_SIZE = 45937 #{'r': 94104, 's': 41728, 'm': 45937}
+COHORT = 20000000
+SUS_SIZE = 94104 #{'r': 94104, 's': 41728, 'm': 45937}
 TOTAL_VARVAL = 4
-base = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Manaus/1-way SA_M10'
-var_list = ['PrEPAdherence', 'HIVtestFreqInterval', 'PrEPDroputPostThreshold'] #['HIVtestFreqInterval']
+base =  r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/1-way SA_R10'
+#r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Salvador/1-way SA_S10' ##r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/Try this'
+var_list = ['PrEPAdherence']#['PrEPAdherence', 'HIVtestFreqInterval', 'PrEPDroputPostThreshold', 'InitAge'] #['HIVtestFreqInterval'] ['PrEPCoverage']# ['PrEPDuration'] #
 var_name = {'PrEPAdherence': 'Adherence (%)',
             'HIVtestFreqInterval': 'Tests (per year)',
-            'PrEPDroputPostThreshold': 'Dropout (%)'}
+            'PrEPDroputPostThreshold': 'Dropout (%)',
+            'InitAge': 'Mean age of cohort (years)',
+            'PrEPCoverage': 'PrEP uptake (%)',
+            'PrEPDuration': 'Time to max. uptake (months)',
+            'DynamicTransmissionPropHRGAttrib': 'Proportion of HR to HR transmissions'
+            }
 strategies = ['30 in 36 months']#['30 in 36 months', '30 in 48 months', '40 in 36 months', '40 in 48 months']
 
 # initiate space to save results
@@ -53,6 +59,7 @@ for strategy in strategies:
     #
     basepath = os.path.join(base, strategy)
     sqpath = os.path.join(base, 'Common runs')
+    sqlist = os.listdir(sqpath)
     readbase = os.path.join(basepath, 'Final runs')
     writebase = os.path.join(base, 'Results')
     
@@ -67,17 +74,35 @@ for strategy in strategies:
     
     for var in readpaths:
         
-        #
+        # check if sq has mutiple files
+        multisq = False
+        if 'SQ_'+var in sqlist:
+            multisq = True
+        
+        # collect intervention output
         try:
             c_op.collect_output(readpaths[var])
         except:
             pass
         
+        # collect SQ output
+        if multisq:
+            try:
+                c_op.collect_output(os.path.join(sqpath, 'SQ_'+var))
+            except:
+                pass
+        
         # read outputs
+        # INT
         floatpath = os.path.join(readpaths[var], 'results')
         cepac_outputs = link.import_all_cepac_out_files(floatpath, module = 'regression')
-        cepac_outputs['status quo'] = link.import_all_cepac_out_files(os.path.join(sqpath, 'results'), module = 'regression')['SQ']
         
+        # SQ
+        if multisq:
+            cepac_outputs['status quo'] = link.import_all_cepac_out_files(os.path.join(sqpath, 'SQ_'+var, 'results'), module = 'regression')
+        else:
+            cepac_outputs['status quo'] = link.import_all_cepac_out_files(os.path.join(sqpath, 'SQ', 'results'), module = 'regression')['SQ']
+            
         # iterate over each file
         for file in cepac_outputs:
             if file == 'status quo':
@@ -87,9 +112,15 @@ for strategy in strategies:
             idx += 1 
             
             # calculate averted infections
-            averted_inf = (cepac_outputs['status quo']['infections'] - cepac_outputs[file]['infections'])[0:HORIZON].sum()
+            if multisq:
+                substring = file.split('=')#file[19:26] + file[30:]
+                substring = substring[1][:-4] + '=' + substring[2]
+                averted_inf = (cepac_outputs['status quo']['SQ_'+substring]['infections'] - cepac_outputs[file]['infections'])[0:HORIZON].sum()
+                averted_tx = (cepac_outputs['status quo']['SQ_'+substring]['transmissions'] - cepac_outputs[file]['transmissions'])[0:HORIZON].sum()
+            else:
+                averted_inf = (cepac_outputs['status quo']['infections'] - cepac_outputs[file]['infections'])[0:HORIZON].sum()
+                averted_tx = (cepac_outputs['status quo']['transmissions'] - cepac_outputs[file]['transmissions'])[0:HORIZON].sum()
             percent_averted_inf = averted_inf / cepac_outputs[file]['infections'][0:HORIZON].sum()
-            averted_tx = (cepac_outputs['status quo']['transmissions'] - cepac_outputs[file]['transmissions'])[0:HORIZON].sum()
             percent_averted_tx = averted_tx / cepac_outputs[file]['transmissions'][0:HORIZON].sum()
             
             # other values
@@ -99,11 +130,11 @@ for strategy in strategies:
             plot_df.loc[idx, 'Variable (x)'] = var
             plot_df.loc[idx, 'Averted infections'] = SUS_SIZE * (averted_inf/COHORT)
             plot_df.loc[idx, 'Averted infections (%)'] = int(100 * percent_averted_inf)
-            plot_df.loc[idx, 'PrEP uptake (%)'] = int(strategy[0:2])
+            plot_df.loc[idx, 'PrEP uptake (%)'] = int(strategy[0:3])
             plot_df.loc[idx, 'Uptake time (months)'] = int(strategy[6:8])
             
             #
-            plot_df1.loc[idx, 'PrEP uptake (%)'] = int(strategy[0:2])
+            plot_df1.loc[idx, 'PrEP uptake (%)'] = int(strategy[0:3])
             plot_df1.loc[idx, 'Uptake time (months)'] = int(strategy[6:8])
             plot_df1.loc[idx, 'Averted infections (%)'] = float(100 * percent_averted_inf)
             #plot_df1.loc[idx1, 'T max. uptake (m)'] = float(strategy[-2:])
@@ -114,17 +145,33 @@ for strategy in strategies:
                 plot_df1.loc[idx, 'Dropout (%)'] = int(0)
                 
             elif var == 'PrEPAdherence':
-                plot_df.loc[idx, 'x'] = int(100 * x)
+                plot_df.loc[idx, 'x'] = 100 * x #int(100 * x)
                 plot_df1.loc[idx, var_name[var]] = int(100 * x)
                 plot_df1.loc[idx, 'Dropout (%)'] = int(0)
                 plot_df1.loc[idx, 'Tests (per year)'] = int(4)
                 
             elif var == 'PrEPDroputPostThreshold':
-                plot_df.loc[idx, 'x'] = int(100 * yearly_prob(x))
+                plot_df.loc[idx, 'x'] = 100 * yearly_prob(x) #int(100 * yearly_prob(x))
                 plot_df1.loc[idx, var_name[var]] = float(100 * x)
                 plot_df1.loc[idx, 'Tests (per year)'] = int(4)
                 plot_df1.loc[idx, 'Adherence (%)'] = int(74)
                 
+            elif var == 'InitAge':
+                plot_df.loc[idx, 'x'] = int(x/12)
+                plot_df1.loc[idx, var_name[var]] = int(x/12)
+                plot_df1.loc[idx, 'Tests (per year)'] = int(4)
+                plot_df1.loc[idx, 'Adherence (%)'] = int(74)
+                plot_df1.loc[idx, 'Dropout (%)'] = int(0)
+            
+            elif var == 'PrEPCoverage':
+                plot_df.loc[idx, 'x'] = int(100 * x)
+            
+            elif var == 'PrEPDuration':
+                plot_df.loc[idx, 'x'] = int(x)
+                
+            elif var == 'DynamicTransmissionPropHRGAttrib':
+                plot_df.loc[idx, 'x'] = x
+                plot_df1.loc[idx, var_name[var]] = x
             
         
 #
@@ -140,6 +187,7 @@ plot_df = plot_df.replace('PrEPAdherence', 'PrEP adherence (%)')
 plot_df = plot_df.replace('HIVtestFreqInterval', 'Test interval (months)')
 plot_df = plot_df.replace('PrEPDroputPostThreshold', 'PrEP dropout (%)')
 plot_df['PrEP uptake (%)'] = pd.Series(plot_df['PrEP uptake (%)'], dtype = 'category')
+plot_df = plot_df.loc[plot_df.loc[:, 'x'] != 900, :]
 
 
 for z in ['Averted infections', 'Averted infections (%)']:

@@ -21,16 +21,15 @@ import TextFileOperations as t_op
 
 # user input
 HORIZON = 120
+COHORT_SIZE = 20000000
 strategies = ['30 in 36 months']#['30 in 36 months', '30 in 48 months', '40 in 36 months', '40 in 48 months']
-var_list = ['PrEPAdherence', 'HIVtestFreqInterval', 'PrEPDroputPostThreshold']
-base = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/1-way SA'
+var_list = ['PrEPAdherence']#['PrEPAdherence', 'HIVtestFreqInterval', 'PrEPDroputPostThreshold', 'InitAge'] # 
+base = r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/Long-acting PrEP' #r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Rio/Try this' #r'/Users/vijetadeshpande/Downloads/MPEC/Brazil/Salvador/1-way SA_S10' #
 
 #%%
 
 def community_benefit(run_A, run_B, HORIZON = 120):
-    
-    # few fixed parameters
-    COHORT_SIZE = 10000000
+
     
     # Utils
     def calculate_average_prob(total_inf):
@@ -85,6 +84,7 @@ for strategy in strategies:
     readbase = os.path.join(basepath, 'Measurement of community benefit')
     writebase = os.path.join(basepath, 'Final runs')
     sqpath = os.path.join(base, 'Common runs')
+    sqlist = os.listdir(sqpath)
     readpaths = {}
     finalpaths = {}
     for var in var_list:
@@ -95,25 +95,53 @@ for strategy in strategies:
     
     #%% 
     # collect and import all the ouputs
+    
     cepac_outputs = {}
-    cepac_outputs['status quo'] = link.import_all_cepac_out_files(os.path.join(sqpath, 'results'), module = 'regression')['SQ']
     community_ben = {}
     position = {}
     for var in readpaths:
         
-        # collect output
+        # check if sq has mutiple files
+        multisq = False
+        if 'SQ_'+var in sqlist:
+            multisq = True
+        
+        # collect intervention output
         try:
             c_op.collect_output(readpaths[var])
         except:
             pass
         
+        # collect SQ output
+        if multisq:
+            try:
+                c_op.collect_output(os.path.join(sqpath, 'SQ_'+var))
+            except:
+                pass
+        
         # read output
+        # SQ
+        if multisq:
+            try:
+                c_op.collect_output(os.path.join(sqpath, 'SQ_'+var, 'results'))
+            except:
+                pass
+            
+            cepac_outputs['status quo'] = link.import_all_cepac_out_files(os.path.join(sqpath, 'SQ_'+var, 'results'), module = 'regression')
+        else:
+            cepac_outputs['status quo'] = link.import_all_cepac_out_files(os.path.join(sqpath, 'SQ', 'results'), module = 'regression')['SQ']
+            
+        
+        # INT
         cepac_outputs[var] = link.import_all_cepac_out_files(os.path.join(readpaths[var], 'results'), module = 'regression')
         
         # send to community benefit function 
         for file in cepac_outputs[var]:
             # calculate community benefit
-            per_red, coeff = community_benefit(cepac_outputs['status quo'], cepac_outputs[var][file], HORIZON)
+            if multisq:
+                per_red, coeff = community_benefit(cepac_outputs['status quo']['SQ_'+file], cepac_outputs[var][file], HORIZON)
+            else:
+                per_red, coeff = community_benefit(cepac_outputs['status quo'], cepac_outputs[var][file], HORIZON)
             coeff = max(coeff, 10**-8)
             community_ben[file] = {}
             community_ben[file]['percentage reduction'] = per_red

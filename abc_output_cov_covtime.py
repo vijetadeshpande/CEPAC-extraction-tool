@@ -163,7 +163,7 @@ def write_final_runs(value_grid, path_dict, STOP_TIME = 60):
                 out[j_idx]["A"] = cepac_out["status quo"]["SQ"]
                 out[j_idx]["B"] = cepac_out["status quo"]["SQ"]
                 out[j_idx]["C"] = cepac_out["status quo"]["SQ"]
-                inp[j_idx] = inp[5]
+                inp[j_idx] = inp[1]
             inp[row_idx]['PrEPCoverage'] = i
             inp[row_idx]['PrEPDuration'] = STOP_TIME #60 #600
             percentage_decline.append(tx_algo.get_percentage_decline(out[row_idx], inp[row_idx]))
